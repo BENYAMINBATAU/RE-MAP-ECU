@@ -3,1072 +3,1414 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IDX Alpha Hunter — Pak Benyamin × Stockbit</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<title>ZEUS MASTER PRO — Honda Keihin ECU Remap + Bypass</title>
 <style>
-:root {
-  --bg: #020508;
-  --s1: #060d15;
-  --s2: #0a1520;
-  --border: #0f2035;
-  --border2: #1a3050;
-  --accent: #00d4ff;
-  --accent2: #0099cc;
-  --gold: #ffc107;
-  --green: #00e676;
-  --green2: #00c853;
-  --red: #ff1744;
-  --orange: #ff6d00;
-  --purple: #7c4dff;
-  --text: #b8cfe0;
-  --text2: #7a9ab8;
-  --mono: 'JetBrains Mono', monospace;
-  --head: 'Barlow Condensed', sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;800&family=Orbitron:wght@700;900&display=swap');
+
+:root{
+  --bg:#030608;--panel:#060d10;--b1:#0c2030;--b2:#102840;
+  --acc:#00d4ff;--grn:#00ff88;--ylw:#ffcc00;--red:#ff2244;--org:#ff7700;--pur:#aa44ff;
+  --txt:#80c8e8;--dim:#1a3a50;--dim2:#245070;--wht:#d0eef8;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Barlow Condensed',sans-serif;min-height:100vh;
+  background-image:radial-gradient(ellipse at 20% 50%,rgba(0,150,255,0.03),transparent 60%),
+    radial-gradient(ellipse at 80% 20%,rgba(0,255,136,0.02),transparent 60%),
+    linear-gradient(rgba(0,212,255,0.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,0.012) 1px,transparent 1px);
+  background-size:100% 100%,100% 100%,20px 20px,20px 20px;}
 
-/* Animated radar sweep background */
-.radar-bg{
-  position:fixed;inset:0;
-  background:
-    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,212,255,0.04) 0%, transparent 60%),
-    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,212,255,0.02) 40px),
-    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,212,255,0.02) 40px);
-  pointer-events:none;z-index:0;
-}
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;gap:16px;padding:10px 16px;background:rgba(0,0,0,0.6);
+  border-bottom:1px solid var(--b2);margin-bottom:14px;flex-wrap:wrap}
+.logo{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--acc);
+  letter-spacing:3px;text-shadow:0 0 16px rgba(0,212,255,0.5);flex-shrink:0}
+.logo span{color:var(--grn)}
+.conn-bar{display:flex;gap:8px;align-items:center;flex:1;flex-wrap:wrap}
+.pipenode{display:flex;align-items:center;gap:5px;font-family:'Share Tech Mono',monospace;font-size:10px}
+.pdot{width:8px;height:8px;border-radius:50%;background:var(--dim);transition:all 0.3s;animation:none}
+.pdot.on{background:var(--grn);box-shadow:0 0 6px var(--grn);animation:pulse 1.5s infinite}
+.pdot.warn{background:var(--ylw);box-shadow:0 0 6px var(--ylw)}
+.pdot.err{background:var(--red);box-shadow:0 0 6px var(--red)}
+.parr{color:var(--dim2);font-size:12px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
-.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 60px;position:relative;z-index:1;}
+.cstat{padding:4px 10px;border:1px solid var(--b2);font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px}
 
-/* ═══════════ HEADER ═══════════ */
-.hdr{
-  background:var(--s1);
-  border:1px solid var(--border2);
-  border-top:3px solid var(--accent);
-  padding:24px 28px;
-  margin-bottom:16px;
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:20px;
-  align-items:center;
-  position:relative;
-  overflow:hidden;
-}
-.hdr::after{
-  content:'ALPHA';
-  position:absolute;right:-15px;top:-15px;
-  font-family:var(--head);font-size:110px;font-weight:900;
-  color:rgba(0,212,255,0.03);pointer-events:none;line-height:1;
-}
-.hdr-tag{font-size:9px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;}
-.hdr h1{font-family:var(--head);font-size:2rem;font-weight:900;color:#fff;line-height:1.1;}
-.hdr h1 b{color:var(--gold);}
-.hdr-sub{font-size:10px;color:var(--text2);line-height:1.8;margin-top:6px;max-width:550px;}
-.src-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;}
-.pill{font-size:8px;padding:3px 9px;border:1px solid;letter-spacing:1px;text-transform:uppercase;cursor:default;}
-.pill.y{border-color:#6200ea;color:#b388ff;background:rgba(98,0,234,0.1);}
-.pill.s{border-color:#00838f;color:#00e5ff;background:rgba(0,131,143,0.1);}
-.pill.i{border-color:#e65100;color:#ffab40;background:rgba(230,81,0,0.1);}
-.pill.b{border-color:#1565c0;color:#82b1ff;background:rgba(21,101,192,0.1);}
-.pill.f{border-color:#2e7d32;color:#69f0ae;background:rgba(46,125,50,0.1);}
-.pill.g{border-color:#b71c1c;color:#ff8a80;background:rgba(183,28,28,0.1);}
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;padding:0 14px;margin-bottom:12px;flex-wrap:wrap}
+.tab{padding:7px 14px;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;
+  border:1px solid var(--b2);color:var(--dim2);background:transparent;cursor:pointer;transition:all 0.2s}
+.tab.a{border-color:var(--acc);color:var(--acc);background:rgba(0,212,255,0.05)}
+.tab.r.a{border-color:var(--red);color:var(--red);background:rgba(255,34,68,0.05)}
+.tab.g.a{border-color:var(--grn);color:var(--grn);background:rgba(0,255,136,0.04)}
+.tc{display:none;padding:0 14px 14px}.tc.a{display:block}
 
-.clock-box{text-align:right;}
-.clock-time{font-family:var(--head);font-size:2rem;font-weight:900;color:var(--accent);display:block;}
-.clock-date{font-size:9px;color:var(--text2);margin-top:2px;}
-.mkt-badge{
-  display:inline-block;font-size:9px;padding:4px 12px;margin-top:6px;
-  font-weight:700;letter-spacing:2px;text-transform:uppercase;
-}
-.mkt-badge.open{background:rgba(0,230,118,0.15);color:var(--green);border:1px solid var(--green);}
-.mkt-badge.closed{background:rgba(255,23,68,0.1);color:var(--red);border:1px solid rgba(255,23,68,0.4);}
+/* ── PANELS ── */
+.sec{background:var(--panel);border:1px solid var(--b1);padding:14px;margin-bottom:10px;position:relative}
+.sec::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--acc),transparent);opacity:0.25}
+.sec.G::before{background:linear-gradient(90deg,transparent,var(--grn),transparent)}
+.sec.R::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.sec.Y::before{background:linear-gradient(90deg,transparent,var(--ylw),transparent)}
+.sec.P::before{background:linear-gradient(90deg,transparent,var(--pur),transparent)}
 
-/* ═══════════ CONTROLS ═══════════ */
-.ctrl{background:var(--s1);border:1px solid var(--border2);padding:20px;margin-bottom:12px;}
-.ctrl-hdr{font-size:9px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
-.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
-.pre{
-  font-family:var(--mono);font-size:9px;padding:6px 14px;
-  border:1px solid var(--border2);background:transparent;color:var(--text2);
-  cursor:pointer;transition:all 0.15s;letter-spacing:1px;text-transform:uppercase;
-}
-.pre:hover,.pre.on{border-color:var(--gold);color:var(--gold);background:rgba(255,193,7,0.07);}
-.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px;}
-.fl label{display:block;font-size:8px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
-.fl input,.fl select{
-  width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);
-  padding:9px 11px;font-family:var(--mono);font-size:11px;outline:none;transition:border-color 0.2s;
-}
-.fl input:focus,.fl select:focus{border-color:var(--accent);}
-.fl select option{background:var(--s2);}
-.fc{grid-column:1/-1;}
+.pt{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;margin-bottom:10px;
+  display:flex;align-items:center;gap:6px}
+.pt::after{content:'';flex:1;height:1px;background:var(--b2)}
+.ptG{color:var(--grn)}.ptY{color:var(--ylw)}.ptR{color:var(--red)}.ptP{color:var(--pur)}
+.ptA{color:var(--acc)}
 
-.btn-go{
-  width:100%;padding:15px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#000;border:none;
-  font-family:var(--head);font-size:16px;font-weight:900;
-  letter-spacing:4px;text-transform:uppercase;cursor:pointer;
-  transition:all 0.2s;position:relative;
-}
-.btn-go:hover:not(:disabled){filter:brightness(1.15);box-shadow:0 0 40px rgba(0,212,255,0.35);transform:translateY(-1px);}
-.btn-go:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+/* ── CONNECT PANEL ── */
+.conn-grid{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.sel{background:rgba(0,0,0,0.6);border:1px solid var(--b2);color:var(--txt);
+  font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px 10px;outline:none;width:100%}
+.sel:focus{border-color:var(--acc)}
+.inp{background:rgba(0,0,0,0.6);border:1px solid var(--b2);color:var(--txt);
+  font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px 10px;outline:none}
+.inp:focus{border-color:var(--acc)}
+.btn{padding:8px 18px;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;
+  cursor:pointer;border:none;font-weight:700;transition:all 0.2s;white-space:nowrap}
+.bA{background:linear-gradient(135deg,var(--acc),#0088aa);color:var(--bg)}
+.bA:hover{box-shadow:0 0 16px rgba(0,212,255,0.4)}
+.bG{background:linear-gradient(135deg,var(--grn),#009955);color:var(--bg)}
+.bG:hover{box-shadow:0 0 16px rgba(0,255,136,0.4)}
+.bR{background:transparent;border:1px solid var(--red);color:var(--red)}
+.bR:hover{background:var(--red);color:#fff}
+.bY{background:transparent;border:1px solid var(--ylw);color:var(--ylw)}
+.bY:hover{background:var(--ylw);color:var(--bg)}
+.bP{background:linear-gradient(135deg,var(--pur),#6600cc);color:#fff}
 
-/* ═══════════ PROGRESS ═══════════ */
-.prog{display:none;background:var(--s1);border:1px solid var(--border2);padding:18px;margin-bottom:14px;}
-.prog.show{display:block;}
-.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.prog-title{font-size:9px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;}
-.prog-pct{font-family:var(--head);font-size:1.4rem;font-weight:900;color:var(--gold);}
-.prog-track{height:6px;background:var(--border2);margin-bottom:10px;position:relative;overflow:hidden;}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));width:0%;transition:width 0.3s ease;position:relative;}
-.prog-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:20px;background:rgba(255,255,255,0.3);filter:blur(4px);}
-.prog-log{font-size:9px;line-height:2;max-height:80px;overflow:hidden;}
-.lg{color:var(--text2);}
-.lg.ok{color:var(--green);}
-.lg.er{color:var(--red);}
-.lg.in{color:var(--gold);}
-.lg.sk{color:var(--text2);opacity:0.6;}
+/* ── PROGRESS ── */
+.pb{margin:5px 0}.pb-row{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:10px;margin-bottom:3px}
+.pb-bar{height:5px;background:var(--b1);border-radius:3px;overflow:hidden}
+.pb-fill{height:100%;border-radius:3px;transition:width 0.4s}
 
-/* ═══════════ SUMMARY ═══════════ */
-.sum{display:none;gap:1px;background:var(--border);border:1px solid var(--border2);margin-bottom:14px;}
-.sum.show{display:grid;grid-template-columns:repeat(7,1fr);}
-.si{background:var(--s1);padding:13px 10px;text-align:center;}
-.si .v{font-family:var(--head);font-size:1.5rem;font-weight:900;display:block;color:var(--accent);}
-.si .v.g{color:var(--green);}
-.si .v.r{color:var(--red);}
-.si .v.y{color:var(--gold);}
-.si .v.p{color:var(--purple);}
-.si .l{font-size:7px;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;display:block;}
+/* ── DATA GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 
-/* ═══════════ TOOLBAR ═══════════ */
-.tb{display:none;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
-.tb.show{display:flex;}
-.tb-l{display:flex;gap:5px;align-items:center;font-size:8px;color:var(--text2);flex-wrap:wrap;}
-.tbtn{
-  font-family:var(--mono);font-size:8px;padding:5px 11px;
-  background:transparent;border:1px solid var(--border2);color:var(--text2);
-  cursor:pointer;transition:all 0.15s;letter-spacing:1px;text-transform:uppercase;
-}
-.tbtn:hover,.tbtn.on{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.05);}
-.tb-r input{
-  background:var(--s1);border:1px solid var(--border2);color:var(--text);
-  padding:6px 12px;font-family:var(--mono);font-size:10px;outline:none;width:180px;
-}
-.tb-r input:focus{border-color:var(--accent);}
+/* ── DATA CARD ── */
+.dc{border:1px solid var(--b1);padding:10px;text-align:center;background:rgba(0,212,255,0.02);transition:border-color 0.4s,box-shadow 0.4s}
+.dc:hover{border-color:var(--b2)}
+.dc-v{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:3px;transition:color 0.3s}
+.dc-l{font-size:8px;letter-spacing:3px;color:var(--dim2)}
+.dc-u{font-size:10px;color:var(--dim2);margin-top:2px}
 
-/* ═══════════ CARDS ═══════════ */
-.card{
-  background:var(--s1);
-  border:1px solid var(--border2);
-  border-left:5px solid var(--border2);
-  margin-bottom:8px;
-  padding:14px 18px;
-  display:grid;
-  grid-template-columns:36px 170px 1fr 130px 110px;
-  gap:12px;
-  align-items:center;
-  animation:fadeUp 0.35s ease both;
-  transition:all 0.15s;
-  position:relative;
-}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.card:hover{background:var(--s2);border-color:rgba(0,212,255,0.25);transform:translateX(3px);}
-.card.up{border-left-color:var(--green);}
-.card.side{border-left-color:var(--gold);}
-.card.down{border-left-color:var(--red);}
+/* ── SENSOR BAR ── */
+.sbar{margin:6px 0}.sbar-top{display:flex;justify-content:space-between;
+  font-family:'Share Tech Mono',monospace;font-size:11px;margin-bottom:3px}
+.sbar-track{height:6px;background:var(--b1);border-radius:3px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:3px;transition:width 0.4s}
 
-/* Profit tier glow */
-.card.tier-s{box-shadow:0 0 15px rgba(0,230,118,0.12);}
-.card.tier-a{box-shadow:0 0 10px rgba(255,193,7,0.08);}
+/* ── MAP TABLE ── */
+.map-wrap{overflow-x:auto}
+.map-tbl{border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px;width:100%}
+.map-tbl td,.map-tbl th{border:1px solid var(--b1);padding:3px 5px;text-align:center;cursor:pointer;transition:all 0.15s;min-width:36px}
+.map-tbl th{background:rgba(0,0,0,0.4);color:var(--dim2);font-size:9px;cursor:default}
+.map-tbl td:hover{border-color:var(--acc);z-index:1;position:relative}
+.map-tbl td.sel-cell{background:rgba(0,212,255,0.2);border-color:var(--acc);color:var(--acc)}
+.map-tbl td.hot{background:rgba(255,34,68,0.15)}
+.map-tbl td.warm{background:rgba(255,119,0,0.12)}
+.map-tbl td.cool{background:rgba(0,136,255,0.1)}
+.map-edit{display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}
 
-/* Profit tier badge */
-.tier-flag{
-  position:absolute;top:0;right:0;
-  font-family:var(--head);font-size:9px;font-weight:900;
-  padding:3px 10px;letter-spacing:2px;
-}
-.tier-flag.S{background:var(--green);color:#000;}
-.tier-flag.A{background:var(--gold);color:#000;}
-.tier-flag.B{background:rgba(0,212,255,0.2);color:var(--accent);}
-.tier-flag.C{background:rgba(255,255,255,0.05);color:var(--text2);}
+/* ── FLASH / BIN ── */
+.flash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hex-view{background:rgba(0,0,0,0.7);border:1px solid var(--b1);padding:10px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;height:180px;overflow-y:auto;
+  line-height:1.7;color:#80c8e8}
+.hex-view .addr{color:var(--dim2)}.hex-view .hexb{color:var(--wht)}.hex-view .ascii{color:var(--grn)}
+.hex-view::-webkit-scrollbar{width:3px}.hex-view::-webkit-scrollbar-thumb{background:var(--acc)}
 
-/* Column: Rank */
-.c-rank{font-size:11px;color:var(--text2);text-align:center;}
-.c-rank span{display:block;font-family:var(--head);font-size:1.1rem;font-weight:900;color:var(--text);}
+/* ── TERMINAL ── */
+.term{background:rgba(0,0,0,0.8);border:1px solid var(--b1);padding:10px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;height:160px;overflow-y:auto;line-height:1.7}
+.term::-webkit-scrollbar{width:3px}.term::-webkit-scrollbar-thumb{background:var(--acc)}
+.t-inp-row{display:flex;gap:6px;margin-top:6px}
+.t-inp{flex:1;background:rgba(0,0,0,0.6);border:1px solid var(--b2);color:var(--grn);
+  font-family:'Share Tech Mono',monospace;font-size:11px;padding:6px 10px;outline:none}
+.t-inp:focus{border-color:var(--acc)}
 
-/* Column: Info */
-.c-info .ticker{font-family:var(--head);font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:1px;}
-.c-info .name{font-size:9px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;}
-.c-info .sector{font-size:7px;padding:2px 6px;border:1px solid var(--border2);color:var(--text2);margin-top:5px;display:inline-block;letter-spacing:1px;text-transform:uppercase;}
-.c-info .stockbit-link{
-  display:inline-flex;align-items:center;gap:4px;
-  margin-top:6px;font-size:8px;padding:4px 10px;
-  background:linear-gradient(135deg,#0052cc,#0066ff);
-  color:#fff;text-decoration:none;letter-spacing:1px;text-transform:uppercase;
-  transition:all 0.15s;
-}
-.c-info .stockbit-link:hover{filter:brightness(1.2);transform:scale(1.03);}
+/* ── ECU INFO CARD ── */
+.ecu-card{background:rgba(0,212,255,0.03);border:1px solid var(--b2);padding:12px;font-family:'Share Tech Mono',monospace;font-size:11px}
+.ecu-card .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--b1)}
+.ecu-card .row:last-child{border:none}
+.ecu-card .k{color:var(--dim2)}.ecu-card .v{color:var(--wht)}
 
-/* Column: Indicators */
-.c-ind{}
-.sigs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px;}
-.sig{font-size:7px;padding:2px 6px;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap;}
-.sig.bull{background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.25);}
-.sig.bear{background:rgba(255,23,68,0.1);color:var(--red);border:1px solid rgba(255,23,68,0.25);}
-.sig.neu{background:rgba(255,193,7,0.1);color:var(--gold);border:1px solid rgba(255,193,7,0.25);}
-.sig.info{background:rgba(0,212,255,0.07);color:var(--accent);border:1px solid rgba(0,212,255,0.2);}
+/* ── OSCOPE ── */
+.osc-wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.osc-box{position:relative;background:rgba(0,0,0,0.6);border:1px solid var(--b1)}
+.osc-lbl{position:absolute;top:4px;left:6px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2)}
 
-.ta-grid{display:flex;gap:10px;font-size:9px;flex-wrap:wrap;margin-bottom:7px;}
-.ta-item{display:flex;flex-direction:column;align-items:center;min-width:30px;}
-.ta-v{font-size:10px;color:var(--text);}
-.ta-l{font-size:7px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+/* ── DTC PANEL ── */
+.dtc-list{font-family:'Share Tech Mono',monospace;font-size:11px}
+.dtc-item{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--b1);align-items:center}
+.dtc-mil{min-width:55px;color:var(--red);font-weight:700}
+.dtc-desc{flex:1;color:var(--txt)}
+.dtc-stat{font-size:9px;padding:2px 6px;border:1px solid var(--red);color:var(--red)}
 
-.score-wrap{display:flex;align-items:center;gap:8px;}
-.score-n{
-  font-family:var(--head);font-size:1.1rem;font-weight:900;min-width:32px;
-}
-.score-bar{flex:1;height:5px;background:var(--border2);max-width:150px;}
-.score-fill-bar{height:100%;transition:width 0.5s ease;}
-.score-fill-bar.h{background:linear-gradient(90deg,var(--green2),var(--green));}
-.score-fill-bar.m{background:linear-gradient(90deg,#e65100,var(--gold));}
-.score-fill-bar.l{background:linear-gradient(90deg,#b71c1c,var(--red));}
-.score-sub{font-size:8px;color:var(--text2);}
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px}
+.bG2{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--grn)}
+.bR2{background:rgba(255,34,68,0.1);border:1px solid rgba(255,34,68,0.3);color:var(--red)}
+.bY2{background:rgba(255,204,0,0.1);border:1px solid rgba(255,204,0,0.3);color:var(--ylw)}
+.bA2{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);color:var(--acc)}
+.bP2{background:rgba(170,68,255,0.1);border:1px solid rgba(170,68,255,0.3);color:var(--pur)}
 
-/* Data confidence */
-.confidence{font-size:8px;color:var(--text2);margin-top:5px;}
-.conf-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;vertical-align:middle;}
+/* ── TIP/WARN ── */
+.tip{padding:7px 10px;border-left:3px solid var(--ylw);background:rgba(255,204,0,0.04);font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw);margin:6px 0;line-height:1.6}
+.warn{padding:7px 10px;border-left:3px solid var(--red);background:rgba(255,34,68,0.04);font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red);margin:6px 0;line-height:1.6}
+.info{padding:7px 10px;border-left:3px solid var(--acc);background:rgba(0,212,255,0.03);font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--acc);margin:6px 0;line-height:1.6}
 
-/* Column: Price */
-.c-price{text-align:right;}
-.price-big{font-family:var(--head);font-size:1.4rem;font-weight:900;color:var(--accent);}
-.price-chg{font-size:10px;margin-top:2px;}
-.price-chg.pos{color:var(--green);}
-.price-chg.neg{color:var(--red);}
-.price-meta{font-size:8px;color:var(--text2);margin-top:4px;line-height:1.8;}
-.target-price{font-size:9px;margin-top:6px;padding:4px 8px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);color:var(--green);}
+/* ── REMAP SLIDERS ── */
+.slider-grid{display:flex;flex-direction:column;gap:10px}
+.sl-row{display:grid;grid-template-columns:140px 1fr 60px 60px;gap:8px;align-items:center}
+.sl-lbl{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--txt)}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:var(--b2);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--acc);cursor:pointer}
+.sl-val{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--acc);text-align:center}
+.sl-orig{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2);text-align:center}
 
-/* Column: Action */
-.c-act{text-align:center;}
-.rec{
-  display:block;font-family:var(--head);font-size:10px;font-weight:900;
-  padding:6px 8px;letter-spacing:1px;margin-bottom:6px;
-}
-.rec.sb{background:var(--green);color:#000;}
-.rec.b{background:rgba(0,230,118,0.15);color:var(--green);border:1px solid var(--green);}
-.rec.h{background:rgba(255,193,7,0.12);color:var(--gold);border:1px solid var(--gold);}
-.rec.s{background:rgba(255,109,0,0.12);color:var(--orange);border:1px solid var(--orange);}
-.rec.ss{background:var(--red);color:#fff;}
-.rsi-mini{font-size:8px;color:var(--text2);margin-top:3px;}
-.rsi-mini-bar{height:3px;background:var(--border2);margin-top:3px;position:relative;}
-.rsi-mini-fill{position:absolute;top:0;left:0;height:100%;}
-
-/* No result */
-.empty{padding:24px;text-align:center;font-size:11px;color:var(--text2);border:1px dashed var(--border2);}
-.err-msg{padding:14px 18px;font-size:10px;line-height:1.8;border:1px solid;margin-top:8px;}
-.err-msg.e{background:rgba(255,23,68,0.05);border-color:rgba(255,23,68,0.3);color:#ff5577;}
-.err-msg.w{background:rgba(255,193,7,0.05);border-color:rgba(255,193,7,0.3);color:var(--gold);}
-.err-msg.i{background:rgba(0,212,255,0.04);border-color:rgba(0,212,255,0.2);color:var(--accent);}
-
-.disc{margin-top:24px;padding:14px;border:1px solid var(--border);font-size:9px;color:var(--text2);line-height:1.8;}
-
-@media(max-width:900px){
-  .card{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto;}
-  .c-rank{display:none;}
-  .c-ind{grid-column:1/-1;}
-  .sum.show{grid-template-columns:repeat(4,1fr);}
-  .hdr{grid-template-columns:1fr;}
-}
+@media(max-width:700px){.g2,.g3,.g4,.g6,.osc-wrap,.flash-grid{grid-template-columns:1fr}.sl-row{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-<div class="radar-bg"></div>
-<div class="wrap">
 
-<!-- HEADER -->
-<div class="hdr">
-  <div>
-    <div class="hdr-tag">◈ Alpha Hunter Pro — Stockbit Edition</div>
-    <h1>IDX <b>PENNY PROFIT</b> SCANNER</h1>
-    <p class="hdr-sub">
-      Multi-source real data: Yahoo Finance + Stooq + IDX + CNBC Asia.<br>
-      Analisis teknikal 8 indikator + Profit Scoring + Target Price + Link Stockbit langsung.<br>
-      Filter: Harga &lt; Rp 100 · Uptrend Confirmed · Prioritas Profit Tertinggi.
-    </p>
-    <div class="src-pills">
-      <span class="pill y">Yahoo Finance</span>
-      <span class="pill s">Stooq Charts</span>
-      <span class="pill i">IDX Data</span>
-      <span class="pill b">Stockbit Link</span>
-      <span class="pill g">Google Finance</span>
-      <span class="pill f">100% Free</span>
-    </div>
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">ZEUS<span>PRO</span></div>
+  <div class="conn-bar">
+    <div class="pipenode"><div class="pdot" id="p-usb"></div><span id="p-usb-l" style="color:var(--dim2)">CP2102</span></div>
+    <span class="parr">→</span>
+    <div class="pipenode"><div class="pdot" id="p-zeus"></div><span id="p-zeus-l" style="color:var(--dim2)">K-LINE</span></div>
+    <span class="parr">→</span>
+    <div class="pipenode"><div class="pdot" id="p-ecu"></div><span id="p-ecu-l" style="color:var(--dim2)">ECU</span></div>
+    <span class="parr">→</span>
+    <div class="pipenode"><div class="pdot" id="p-flash"></div><span id="p-flash-l" style="color:var(--dim2)">FLASH</span></div>
   </div>
-  <div class="clock-box">
-    <span class="clock-time" id="clk">--:--:--</span>
-    <div class="clock-date" id="clkd">--</div>
-    <div id="mkts" class="mkt-badge closed">● CLOSED</div>
-    <div style="font-size:8px;color:var(--text2);margin-top:5px;" id="session-info">--</div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <span class="cstat" id="top-rpm" style="color:var(--grn)">0 RPM</span>
+    <span class="cstat" id="top-ect" style="color:var(--org)">-- °C</span>
+    <span class="cstat" id="top-dtc" style="color:var(--dim2)">DTC: 0</span>
+    <span class="cstat" id="top-mode" style="color:var(--dim2)">OFFLINE</span>
   </div>
 </div>
 
-<!-- CONTROLS -->
-<div class="ctrl">
-  <div class="ctrl-hdr">⚙ Konfigurasi Screening — Target: &lt;Rp100 Uptrend Profit</div>
-
-  <div style="font-size:8px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">WATCHLIST PRESET:</div>
-  <div class="presets">
-    <button class="pre on" onclick="setPreset('penny',this)">🎯 Penny &lt;100</button>
-    <button class="pre" onclick="setPreset('volatile',this)">⚡ High Volatile</button>
-    <button class="pre" onclick="setPreset('energy',this)">⛽ Energi</button>
-    <button class="pre" onclick="setPreset('infra',this)">🏗 Infrastruktur</button>
-    <button class="pre" onclick="setPreset('consumer',this)">🛒 Konsumer</button>
-    <button class="pre" onclick="setPreset('mining',this)">⛏ Pertambangan</button>
-    <button class="pre" onclick="setPreset('finance',this)">🏦 Keuangan</button>
-    <button class="pre" onclick="setPreset('custom',this)">✏ Custom</button>
-  </div>
-
-  <div class="fg">
-    <div class="fl">
-      <label>Max Harga (Rp)</label>
-      <input type="number" id="f-price" value="100" min="1">
-    </div>
-    <div class="fl">
-      <label>Min Harga (Rp)</label>
-      <input type="number" id="f-price-min" value="1" min="1">
-    </div>
-    <div class="fl">
-      <label>Min Volume Lot</label>
-      <input type="number" id="f-vol" value="500">
-    </div>
-    <div class="fl">
-      <label>RSI Min (Ideal 40)</label>
-      <input type="number" id="f-rsi-min" value="35" min="0" max="100">
-    </div>
-    <div class="fl">
-      <label>RSI Max (Ideal 65)</label>
-      <input type="number" id="f-rsi-max" value="68" min="0" max="100">
-    </div>
-    <div class="fl">
-      <label>Min Profit Score</label>
-      <input type="number" id="f-score" value="50" min="0" max="100">
-    </div>
-    <div class="fl">
-      <label>Trend Filter</label>
-      <select id="f-trend">
-        <option value="up">Uptrend Only ✅</option>
-        <option value="all">Semua Trend</option>
-        <option value="side">Sideways</option>
-      </select>
-    </div>
-    <div class="fl">
-      <label>Rekomendasi</label>
-      <select id="f-rec">
-        <option value="buy">BUY / STRONG BUY</option>
-        <option value="all">Semua</option>
-        <option value="hold">Hold</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="fg">
-    <div class="fl fc">
-      <label>Custom Watchlist (pisah koma) — kosongkan untuk pakai preset</label>
-      <input type="text" id="f-custom" placeholder="Contoh: GOTO,BUMI,DEWA,STRK,META,ENRG">
-    </div>
-  </div>
-
-  <button class="btn-go" id="scan-btn" onclick="runScan()">🔍 HUNT ALPHA — SCAN SEKARANG</button>
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab a" onclick="sw(this,'t-connect')">⚡ CONNECT</button>
+  <button class="tab g" onclick="sw(this,'t-live')">📊 LIVE DATA</button>
+  <button class="tab" onclick="sw(this,'t-flash')">💾 FLASH READ</button>
+  <button class="tab r" onclick="sw(this,'t-remap')">🔧 REMAP ECU</button>
+  <button class="tab" onclick="sw(this,'t-dtc')">⚠ DTC</button>
+  <button class="tab" onclick="sw(this,'t-term')">📟 TERMINAL</button>
+  <button class="tab" onclick="sw(this,'t-spec')">📋 SPEC</button>
 </div>
 
-<!-- PROGRESS -->
-<div class="prog" id="prog">
-  <div class="prog-top">
-    <div class="prog-title">⚡ Multi-Source Scanning</div>
-    <div class="prog-pct"><span id="pd">0</span>/<span id="pt">0</span> — <span id="pp">0</span>%</div>
+<!-- ════════════════════════════════ -->
+<!-- TAB: CONNECT                    -->
+<!-- ════════════════════════════════ -->
+<div class="tc a" id="t-connect">
+
+<div class="g2">
+<div>
+<div class="sec">
+<div class="pt ptA">KONEKSI ZEUS CP2102 → ECU HONDA</div>
+<div style="margin-bottom:10px">
+  <div style="font-size:11px;color:var(--dim2);font-family:'Share Tech Mono',monospace;margin-bottom:6px">ECU MODEL:</div>
+  <select class="sel" id="ecu-model" onchange="ecuChanged()">
+    <option value="k56">38770-K56-N01 — Vario 150 (Keihin R8C)</option>
+    <option value="k45">38770-K45N-NA1 — Vario 125 (Keihin H8C)</option>
+    <option value="k93">38770-K93-N01 — Beat FI (Keihin H8C)</option>
+    <option value="mkj">38770-MKJ-D51 — CBR 150 (Keihin R8C)</option>
+    <option value="kyj">38770-KYJ-922 — CBR 250 (Keihin R8C)</option>
+    <option value="k0j">30400-K0J-N61 — PCX 160 (Shindengen)</option>
+  </select>
+</div>
+
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+  <button class="btn bA" id="btn-con" onclick="doConnect()">⚡ CONNECT</button>
+  <button class="btn bR" id="btn-dis" style="display:none" onclick="doDisc()">✕ DISCONNECT</button>
+  <button class="btn bY" onclick="doDemo()">▷ DEMO MODE</button>
+</div>
+
+<div id="baud-section" style="display:none">
+  <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);margin-bottom:6px;letter-spacing:2px">AUTO-DETECT BAUD:</div>
+  <div id="baud-rows"></div>
+</div>
+
+<div id="serial-warn" style="display:none" class="warn">
+  ⚠ Web Serial API butuh <b>Google Chrome 89+</b>. Buka file ini di Chrome, bukan browser lain.
+</div>
+</div>
+
+<div class="sec">
+<div class="pt ptA">INFO ECU TERDETEKSI</div>
+<div class="ecu-card" id="ecu-info">
+  <div class="row"><span class="k">Part Number</span><span class="v" id="ei-pn">—</span></div>
+  <div class="row"><span class="k">ECU Type</span><span class="v" id="ei-type">—</span></div>
+  <div class="row"><span class="k">Flash Size</span><span class="v" id="ei-flash">—</span></div>
+  <div class="row"><span class="k">Protocol</span><span class="v" id="ei-proto">K-Line 10400 baud</span></div>
+  <div class="row"><span class="k">Baud Rate</span><span class="v" id="ei-baud">—</span></div>
+  <div class="row"><span class="k">VID/PID</span><span class="v" id="ei-vid">—</span></div>
+  <div class="row"><span class="k">Status</span><span class="v" id="ei-stat" style="color:var(--dim2)">OFFLINE</span></div>
+</div>
+</div>
+</div>
+
+<div>
+<div class="sec">
+<div class="pt ptY">SPEC ZEUS MST-100P + HONDA KEIHIN</div>
+<div style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:2;background:rgba(0,0,0,0.4);padding:10px;border:1px solid var(--b1)">
+<span style="color:var(--acc)">ZEUS MST-100P Chip:</span>   <span style="color:var(--wht)">CP2102 Silicon Labs (VID: 0x10C4)</span><br>
+<span style="color:var(--acc)">Protokol:</span>              <span style="color:var(--wht)">Honda K-Line ISO 9141 (undocumented)</span><br>
+<span style="color:var(--acc)">Baud Rate ECU:</span>         <span style="color:var(--ylw)">10400 baud (non-standard)</span><br>
+<span style="color:var(--acc)">ZEUS → PC Baud:</span>        <span style="color:var(--wht)">38400 / 115200 (normal)</span><br>
+<span style="color:var(--acc)">Init K-Line:</span>           <span style="color:var(--wht)">Pull LOW 70ms → HIGH 120ms → wakeup</span><br>
+<span style="color:var(--acc)">Frame Format:</span>          <span style="color:var(--wht)">[DST][LEN][TYPE][TABLE][ADDR][DATA...][CS]</span><br>
+<span style="color:var(--acc)">Checksum:</span>              <span style="color:var(--ylw)">(0x100 - sum) & 0xFF</span><br>
+<span style="color:var(--acc)">Keihin Flash:</span>         <span style="color:var(--wht)">48 KB / 56 KB / 64 KB .bin</span><br>
+<span style="color:var(--acc)">Remap Tools:</span>          <span style="color:var(--wht)">TunerPro RT + XDF definition file</span><br>
+<span style="color:var(--acc)">DLC Connector:</span>        <span style="color:var(--wht)">4-pin Sumitomo HM090</span><br>
+<span style="color:var(--acc)">K-Line Pin:</span>           <span style="color:var(--ylw)">DLC1 (biru/putih) — 12V bidirectional</span><br>
+</div>
+</div>
+
+<div class="sec G">
+<div class="pt ptG">SUPPORT MATRIX — HONDA MOTOR INDONESIA</div>
+<table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px">
+<tr style="background:rgba(0,255,136,0.04)">
+  <th style="padding:5px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">MOTOR</th>
+  <th style="padding:5px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">ECU PN</th>
+  <th style="padding:5px 8px;border:1px solid var(--b1);color:var(--dim2)">CHIP</th>
+  <th style="padding:5px 8px;border:1px solid var(--b1);color:var(--dim2)">FLASH</th>
+  <th style="padding:5px 8px;border:1px solid var(--b1);color:var(--dim2)">REMAP</th>
+</tr>
+<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">Vario 150</td><td style="padding:4px 8px;border:1px solid var(--b1)">K56-N01</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">R8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">56KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">Vario 125</td><td style="padding:4px 8px;border:1px solid var(--b1)">K45N-NA1</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">H8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">48KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">Beat FI</td><td style="padding:4px 8px;border:1px solid var(--b1)">K93-N01</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">H8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">48KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">CBR 150</td><td style="padding:4px 8px;border:1px solid var(--b1)">MKJ-D51</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">R8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">56KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">CBR 250</td><td style="padding:4px 8px;border:1px solid var(--b1)">KYJ-922</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">R8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">56KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">PCX 160</td><td style="padding:4px 8px;border:1px solid var(--b1)">K0J-N61</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">V850</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">256KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--ylw)">~</td></tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- TAB: LIVE DATA                  -->
+<!-- ════════════════════════════════ -->
+<div class="tc" id="t-live">
+<div class="g2">
+<div>
+<div class="sec">
+<div class="pt ptG">RPM + STATUS ENGINE</div>
+<div style="text-align:center;margin-bottom:10px">
+  <svg width="280" height="120" viewBox="0 0 280 120">
+    <defs>
+      <linearGradient id="rg2"><stop offset="0%" stop-color="#00ff88"/><stop offset="70%" stop-color="#ffcc00"/><stop offset="100%" stop-color="#ff2244"/></linearGradient>
+      <filter id="gl2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <path d="M 15 115 A 125 125 0 0 1 265 115" fill="none" stroke="#0c2030" stroke-width="12" stroke-linecap="round"/>
+    <path id="rpm-arc" d="M 15 115 A 125 125 0 0 1 265 115" fill="none" stroke="url(#rg2)" stroke-width="12" stroke-linecap="round" stroke-dasharray="392" stroke-dashoffset="392" filter="url(#gl2)"/>
+    <text x="140" y="105" text-anchor="middle" font-family="Orbitron,monospace" font-size="52" font-weight="900" fill="#00ff88" id="rpm-txt">0</text>
+    <text x="140" y="118" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-size="9" fill="#1a3a50" letter-spacing="4">RPM</text>
+  </svg>
+</div>
+<div class="g4">
+  <div class="dc"><div class="dc-v" id="d-spd" style="color:var(--grn)">0</div><div class="dc-l">KM/H</div></div>
+  <div class="dc"><div class="dc-v" id="d-tps" style="color:var(--org)">0%</div><div class="dc-l">TPS</div></div>
+  <div class="dc"><div class="dc-v" id="d-gear" style="color:var(--ylw)">N</div><div class="dc-l">GEAR</div></div>
+  <div class="dc"><div class="dc-v" id="d-bat" style="color:var(--grn)">--</div><div class="dc-l">VOLT</div></div>
+</div>
+</div>
+
+<div class="sec">
+<div class="pt ptA">SENSOR READINGS</div>
+<div class="sbar"><div class="sbar-top"><span>ECT Coolant</span><span id="d-ect" style="color:var(--org)">-- °C</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-ect" style="width:0%;background:var(--org)"></div></div></div>
+<div class="sbar"><div class="sbar-top"><span>IAT Intake Air</span><span id="d-iat" style="color:var(--acc)">-- °C</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-iat" style="width:0%;background:var(--acc)"></div></div></div>
+<div class="sbar"><div class="sbar-top"><span>MAP Pressure</span><span id="d-map" style="color:var(--grn)">-- kPa</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-map" style="width:0%;background:var(--grn)"></div></div></div>
+<div class="sbar"><div class="sbar-top"><span>O2 Sensor</span><span id="d-o2" style="color:var(--ylw)">-- V</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-o2" style="width:0%;background:var(--ylw)"></div></div></div>
+<div class="sbar"><div class="sbar-top"><span>Lambda (λ)</span><span id="d-lam" style="color:var(--grn)">--</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-lam" style="width:50%;background:var(--grn)"></div></div></div>
+</div>
+
+<div class="sec G">
+<div class="pt ptG">FUEL + IGNITION LIVE</div>
+<div class="g2">
+  <div class="dc"><div class="dc-v" id="d-inj" style="color:var(--acc);font-size:18px">--</div><div class="dc-l">INJ PW (ms)</div></div>
+  <div class="dc"><div class="dc-v" id="d-ign" style="color:var(--ylw);font-size:18px">--</div><div class="dc-l">IGN ADV (°)</div></div>
+  <div class="dc"><div class="dc-v" id="d-stft" style="color:var(--acc);font-size:18px">--</div><div class="dc-l">STFT (%)</div></div>
+  <div class="dc"><div class="dc-v" id="d-ltft" style="color:var(--acc);font-size:18px">--</div><div class="dc-l">LTFT (%)</div></div>
+</div>
+</div>
+</div>
+
+<div>
+<div class="sec">
+<div class="pt ptA">OSCILLOSCOPE — 4 CHANNEL</div>
+<div class="osc-wrap">
+  <div class="osc-box"><canvas id="cv-rpm" width="300" height="80"></canvas><div class="osc-lbl">RPM</div></div>
+  <div class="osc-box"><canvas id="cv-o2" width="300" height="80"></canvas><div class="osc-lbl">O2 SENSOR</div></div>
+  <div class="osc-box"><canvas id="cv-tps" width="300" height="80"></canvas><div class="osc-lbl">TPS</div></div>
+  <div class="osc-box"><canvas id="cv-inj" width="300" height="80"></canvas><div class="osc-lbl">INJ PW</div></div>
+</div>
+</div>
+
+<div class="sec">
+<div class="pt ptY">PARAMETER TABLE — SEMUA DATA ECU</div>
+<table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px">
+  <tr style="background:rgba(0,0,0,0.3)">
+    <th style="padding:4px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">PARAMETER</th>
+    <th style="padding:4px 8px;border:1px solid var(--b1);color:var(--dim2)">RAW</th>
+    <th style="padding:4px 8px;border:1px solid var(--b1);color:var(--dim2)">VALUE</th>
+    <th style="padding:4px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">FORMULA</th>
+  </tr>
+  <tr id="pr-rpm"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Engine RPM</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;font-family:'Share Tech Mono',monospace">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">0 rpm</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">(B0<<8|B1)*0.25</td></tr>
+  <tr id="pr-spd"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Vehicle Speed</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">0 km/h</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B3 (direct)</td></tr>
+  <tr id="pr-tps"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Throttle Pos</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--org)">0%</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B5*100/255</td></tr>
+  <tr id="pr-ect"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Coolant Temp</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--org)">-- °C</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B0-40</td></tr>
+  <tr id="pr-iat"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Intake Air Temp</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--acc)">-- °C</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B1-40</td></tr>
+  <tr id="pr-map"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">MAP Sensor</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">-- kPa</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B2 (direct kPa)</td></tr>
+  <tr id="pr-o2"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">O2 Sensor</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--ylw)">-- V</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B3*5/255</td></tr>
+  <tr id="pr-bat"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Battery Volt</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">-- V</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B7*18/255</td></tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- TAB: FLASH READ                 -->
+<!-- ════════════════════════════════ -->
+<div class="tc" id="t-flash">
+<div class="warn">⚠ PERHATIAN: Fitur Flash Read/Write dapat menyebabkan ECU tidak bisa boot jika terjadi kesalahan. SELALU backup flash sebelum melakukan write. Gunakan pada ECU trainer/spare terlebih dahulu.</div>
+
+<div class="g2" style="margin-top:10px">
+<div>
+<div class="sec P">
+<div class="pt ptP">FLASH MEMORY READ — KEIHIN ECU</div>
+
+<div style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-bottom:10px;line-height:1.9;background:rgba(0,0,0,0.4);padding:10px;border:1px solid var(--b1)">
+<span style="color:var(--acc)">Protokol Flash Read:</span> Honda FID (Function ID) via K-Line<br>
+<span style="color:var(--acc)">Command:</span> <span style="color:var(--ylw)">72 07 72 TABLE START END CS</span><br>
+<span style="color:var(--acc)">Flash Read CMD:</span> <span style="color:var(--ylw)">72 05 71 TABLE CS</span> (full table dump)<br>
+<span style="color:var(--acc)">Max per request:</span> 256 bytes per frame<br>
+<span style="color:var(--acc)">Total flash (56KB):</span> ≈ 224 requests<br>
+<span style="color:var(--acc)">Checksum fix:</span> Auto-calculated setelah edit<br>
+</div>
+
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+  <button class="btn bP" onclick="startFlashRead()">📖 READ FULL FLASH</button>
+  <button class="btn bA" onclick="readTable()">READ TABLE</button>
+  <button class="btn bY" onclick="saveFlash()">💾 SAVE .BIN</button>
+  <button class="btn bR" onclick="loadFlash()">📂 LOAD .BIN</button>
+</div>
+
+<div class="pb" id="flash-pb" style="display:none">
+  <div class="pb-row"><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--pur)">READING FLASH...</span><span id="flash-pct" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw)">0%</span></div>
+  <div class="pb-bar"><div class="pb-fill" id="flash-fill" style="width:0%;background:var(--pur)"></div></div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);margin-top:3px" id="flash-status">Initializing...</div>
+</div>
+
+<div class="hex-view" id="flash-hex"><span style="color:var(--dim2)">Flash belum dibaca. Klik READ FULL FLASH untuk memulai...</span></div>
+
+<div style="margin-top:6px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2)">
+  <span id="flash-size">Size: 0 bytes</span> | <span id="flash-cs">Checksum: --</span>
+</div>
+</div>
+
+<div class="sec R">
+<div class="pt ptR">FLASH WRITE — TULIS KE ECU</div>
+<div class="warn">⚠ HANYA untuk ECU trainer/bench! Pastikan flash .bin valid sebelum write!</div>
+<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+  <button class="btn bR" onclick="writeFlash()">⚡ WRITE FLASH</button>
+  <button class="btn bY" onclick="verifyFlash()">✓ VERIFY</button>
+</div>
+<div class="pb" id="write-pb" style="display:none;margin-top:8px">
+  <div class="pb-row"><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red)">WRITING FLASH...</span><span id="write-pct" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw)">0%</span></div>
+  <div class="pb-bar"><div class="pb-fill" id="write-fill" style="width:0%;background:var(--red)"></div></div>
+</div>
+</div>
+</div>
+
+<div>
+<div class="sec">
+<div class="pt ptA">KEIHIN FLASH MAP — MEMORY LAYOUT</div>
+<div style="font-family:'Share Tech Mono',monospace;font-size:10px;line-height:2.2;background:rgba(0,0,0,0.5);padding:10px;border:1px solid var(--b1)">
+<span style="color:var(--dim2)">ADDR ─────── CONTENT ─────────────── SIZE</span><br>
+<span style="color:var(--red)">0x0000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--red)">BOOTLOADER (READ ONLY)</span> <span style="color:var(--dim2)">──────── 4 KB</span><br>
+<span style="color:var(--ylw)">0x1000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--ylw)">CALIBRATION DATA</span> <span style="color:var(--dim2)">─────────────── 8 KB</span><br>
+<span style="color:var(--grn)">0x3000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--grn)">FUEL MAP (RPM × kPa)</span> <span style="color:var(--dim2)">────────── 2 KB</span><br>
+<span style="color:var(--grn)">0x3800</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--grn)">FUEL MAP (RPM × TPS)</span> <span style="color:var(--dim2)">────────── 2 KB</span><br>
+<span style="color:var(--acc)">0x4000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--acc)">IGNITION MAP (RPM × kPa)</span> <span style="color:var(--dim2)">──────── 2 KB</span><br>
+<span style="color:var(--acc)">0x4800</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--acc)">IGNITION MAP (RPM × TPS)</span> <span style="color:var(--dim2)">──────── 2 KB</span><br>
+<span style="color:var(--org)">0x5000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--org)">IDLE CONTROL TABLE</span> <span style="color:var(--dim2)">─────────── 512 B</span><br>
+<span style="color:var(--org)">0x5200</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--org)">COLD START ENRICHMENT</span> <span style="color:var(--dim2)">──────── 256 B</span><br>
+<span style="color:var(--pur)">0x6000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--pur)">RPM LIMITER TABLE</span> <span style="color:var(--dim2)">────────────── 64 B</span><br>
+<span style="color:var(--pur)">0x6100</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--pur)">SPEED LIMITER TABLE</span> <span style="color:var(--dim2)">──────────── 64 B</span><br>
+<span style="color:var(--txt)">0x7000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--txt)">FIRMWARE CODE</span> <span style="color:var(--dim2)">─────────────── rest</span><br>
+<span style="color:var(--dim2)">0xDFFF</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--dim2)">END (56KB)</span><br>
+</div>
+<div class="info" style="margin-top:8px">ℹ Offset di atas adalah perkiraan untuk Keihin R8C (56KB). Offset persis per ECU berbeda dan ada di file XDF TunerPro. Download XDF dari oldskulltuning.com untuk part number spesifik.</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- TAB: REMAP ECU                  -->
+<!-- ════════════════════════════════ -->
+<div class="tc" id="t-remap">
+<div class="g2">
+<div>
+
+<div class="sec Y">
+<div class="pt ptY">FUEL MAP — RPM × MAP PRESSURE (kPa)</div>
+<div class="info">Nilai = injeksi fuel trim. 128 = stock/neutral. >128 = richer. <128 = leaner.</div>
+<div id="fuel-map-wrap" class="map-wrap" style="margin-top:8px"></div>
+<div class="map-edit">
+  <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2)">Selected:</span>
+  <span id="sel-cell-label" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--acc)">—</span>
+  <input class="inp" type="number" id="cell-val" style="width:70px" min="0" max="255">
+  <button class="btn bY" onclick="setCellVal()" style="padding:5px 10px;font-size:9px">SET</button>
+  <button class="btn bG" onclick="applyGlobalTrim()" style="padding:5px 10px;font-size:9px">GLOBAL TRIM</button>
+  <input class="inp" type="number" id="global-trim" value="5" style="width:50px">%
+</div>
+</div>
+
+<div class="sec">
+<div class="pt ptA">IGNITION MAP — RPM × MAP PRESSURE</div>
+<div class="info">Nilai = derajat advance (°). Formula: value/2 - 64. Contoh: 128 = 0°, 148 = +10°</div>
+<div id="ign-map-wrap" class="map-wrap" style="margin-top:8px"></div>
+</div>
+
+</div>
+<div>
+
+<div class="sec R">
+<div class="pt ptR">REMAP PARAMETER LANGSUNG</div>
+<div class="warn">⚠ Perubahan ini akan ditulis langsung ke ECU via K-Line! Pastikan motor dalam kondisi stasioner.</div>
+<div class="slider-grid" style="margin-top:10px">
+  <div class="sl-row">
+    <span class="sl-lbl">Idle RPM Target</span>
+    <input type="range" id="sl-idle" min="600" max="1600" step="50" value="1000" oninput="slUpdate('idle',this.value,'rpm')">
+    <span class="sl-val" id="sv-idle">1000</span>
+    <span class="sl-orig">rpm</span>
   </div>
-  <div class="prog-track"><div class="prog-fill" id="pf"></div></div>
-  <div class="prog-log" id="plog"></div>
-</div>
-
-<!-- SUMMARY -->
-<div class="sum" id="sum">
-  <div class="si"><span class="v" id="s0">0</span><span class="l">Scanned</span></div>
-  <div class="si"><span class="v g" id="s1">0</span><span class="l">Uptrend 🚀</span></div>
-  <div class="si"><span class="v r" id="s2">0</span><span class="l">Downtrend</span></div>
-  <div class="si"><span class="v y" id="s3">0</span><span class="l">Buy Signal</span></div>
-  <div class="si"><span class="v p" id="s4">0</span><span class="l">Tier S/A</span></div>
-  <div class="si"><span class="v" id="s5">0</span><span class="l">Avg Score</span></div>
-  <div class="si"><span class="v g" id="s6">0</span><span class="l">Avg Target%</span></div>
-</div>
-
-<!-- TOOLBAR -->
-<div class="tb" id="tb">
-  <div class="tb-l">
-    SORT:
-    <button class="tbtn on" onclick="doSort('score',this)">Profit Score</button>
-    <button class="tbtn" onclick="doSort('target',this)">Target%</button>
-    <button class="tbtn" onclick="doSort('price',this)">Harga</button>
-    <button class="tbtn" onclick="doSort('change',this)">% Change</button>
-    <button class="tbtn" onclick="doSort('rsi',this)">RSI</button>
-    <button class="tbtn" onclick="doSort('vol',this)">Volume</button>
+  <div class="sl-row">
+    <span class="sl-lbl">Fuel Trim Global</span>
+    <input type="range" id="sl-fuel" min="-25" max="25" step="1" value="0" oninput="slUpdate('fuel',this.value,'%')">
+    <span class="sl-val" id="sv-fuel">0</span>
+    <span class="sl-orig">%</span>
   </div>
-  <div class="tb-r">
-    <input type="text" placeholder="🔍 Cari saham..." oninput="doSearch(this.value)">
+  <div class="sl-row">
+    <span class="sl-lbl">Ignition Advance</span>
+    <input type="range" id="sl-ign" min="-10" max="15" step="0.5" value="0" oninput="slUpdate('ign',this.value,'°')">
+    <span class="sl-val" id="sv-ign">0</span>
+    <span class="sl-orig">°</span>
+  </div>
+  <div class="sl-row">
+    <span class="sl-lbl">Lambda Target</span>
+    <input type="range" id="sl-lam" min="0.90" max="1.15" step="0.01" value="1.00" oninput="slUpdate('lam',this.value,'λ')">
+    <span class="sl-val" id="sv-lam">1.00</span>
+    <span class="sl-orig">λ</span>
+  </div>
+  <div class="sl-row">
+    <span class="sl-lbl">RPM Limiter</span>
+    <input type="range" id="sl-rpm" min="8000" max="14000" step="100" value="11000" oninput="slUpdate('rpm',this.value,'rpm')">
+    <span class="sl-val" id="sv-rpm">11000</span>
+    <span class="sl-orig">rpm</span>
+  </div>
+  <div class="sl-row">
+    <span class="sl-lbl">Speed Limiter</span>
+    <input type="range" id="sl-spd" min="0" max="200" step="5" value="130" oninput="slUpdate('spd',this.value,'km/h')">
+    <span class="sl-val" id="sv-spd">130</span>
+    <span class="sl-orig">km/h</span>
   </div>
 </div>
+<div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+  <button class="btn bR" onclick="applyRemap()">⚡ APPLY REMAP</button>
+  <button class="btn bY" onclick="resetRemap()">↺ RESET STOCK</button>
+  <button class="btn bA" onclick="saveRemapProfile()">💾 SAVE PROFILE</button>
+</div>
+<div id="remap-queue" style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2)">Queue: kosong</div>
+</div>
 
-<!-- RESULTS -->
-<div id="results"></div>
-
-<div class="disc">
-  ⚠ <strong>DISCLAIMER:</strong> Tool ini hanya untuk referensi analisis teknikal dari data publik Yahoo Finance via proxy gratis. Bukan rekomendasi investasi resmi. Data bisa delay 15-20 menit. Selalu verifikasi di Stockbit sebelum trading. Investasi saham mengandung risiko kehilangan modal. DYOR (Do Your Own Research).
+<div class="sec G">
+<div class="pt ptG">REMAP FEATURES — APA YANG BISA DIUBAH</div>
+<div style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:2">
+  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">RPM Limiter</span> — <span style="color:var(--txt)">Naikkan/turunkan cut-off RPM</span><br>
+  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Speed Limiter</span> — <span style="color:var(--txt)">Hilangkan atau sesuaikan batas kecepatan</span><br>
+  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Fuel Map</span> — <span style="color:var(--txt)">RPM × kPa / RPM × TPS (16×16 cells)</span><br>
+  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Ignition Timing</span> — <span style="color:var(--txt)">Advance per RPM dan load</span><br>
+  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Lambda Target</span> — <span style="color:var(--txt)">AFR target closed/open loop</span><br>
+  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Idle RPM</span> — <span style="color:var(--txt)">Stasioner RPM warm/cold</span><br>
+  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Cold Start Enrich</span> — <span style="color:var(--txt)">Bahan bakar saat mesin dingin</span><br>
+  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">DTC Disable</span> — <span style="color:var(--txt)">Matikan kode error tertentu</span><br>
+  <span style="color:var(--ylw)">~</span> <span style="color:var(--wht)">O2 Sensor Delete</span> — <span style="color:var(--txt)">Open loop permanen (butuh WBO2)</span><br>
+  <span style="color:var(--ylw)">~</span> <span style="color:var(--wht)">EVAP Delete</span> — <span style="color:var(--txt)">MIL-88 disable</span><br>
 </div>
 </div>
+
+</div>
+</div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- TAB: DTC                        -->
+<!-- ════════════════════════════════ -->
+<div class="tc" id="t-dtc">
+<div class="g2">
+<div>
+<div class="sec R">
+<div class="pt ptR">ACTIVE FAULT CODES</div>
+<div style="display:flex;gap:6px;margin-bottom:10px">
+  <button class="btn bA" onclick="readDTC()">📖 READ DTC</button>
+  <button class="btn bR" onclick="clearDTC()">🗑 CLEAR ALL</button>
+  <button class="btn bY" onclick="freezeDTC()">📷 FREEZE FRAME</button>
+</div>
+<div class="dtc-list" id="dtc-list">
+  <div style="color:var(--dim2);font-family:'Share Tech Mono',monospace;font-size:11px;padding:10px">
+    Belum ada DTC dibaca. Klik READ DTC setelah connect.
+  </div>
+</div>
+</div>
+</div>
+<div>
+<div class="sec">
+<div class="pt ptA">HONDA KEIHIN DTC REFERENCE</div>
+<div class="dtc-list" id="dtc-ref" style="max-height:400px;overflow-y:auto"></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- TAB: TERMINAL                   -->
+<!-- ════════════════════════════════ -->
+<div class="tc" id="t-term">
+<div class="sec">
+<div class="pt ptA">RAW K-LINE TERMINAL</div>
+<div class="term" id="term-out">
+  <span style="color:var(--dim2)">[SYSTEM] ZEUS PRO Terminal ready. Ketik perintah hex atau gunakan tombol di bawah.</span><br>
+  <span style="color:var(--dim2)">[SYSTEM] Format: spasi-separated hex bytes, contoh: 72 05 71 00 18</span>
+</div>
+<div class="t-inp-row">
+  <input class="t-inp" id="t-inp" placeholder="72 05 71 00 18 ← ketik hex command..." onkeydown="if(event.key==='Enter')sendRaw()">
+  <button class="btn bA" onclick="sendRaw()">SEND</button>
+  <button class="btn bR" onclick="clrTerm()">CLR</button>
+</div>
+<div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+  <button class="btn bA" onclick="qcmd('INIT')" style="padding:5px 10px;font-size:8px">INIT</button>
+  <button class="btn bA" onclick="qcmd('WAKE')" style="padding:5px 10px;font-size:8px">WAKE</button>
+  <button class="btn bA" onclick="qcmd('T00')" style="padding:5px 10px;font-size:8px">TBL-00</button>
+  <button class="btn bA" onclick="qcmd('T10')" style="padding:5px 10px;font-size:8px">TBL-10</button>
+  <button class="btn bA" onclick="qcmd('T11')" style="padding:5px 10px;font-size:8px">TBL-11</button>
+  <button class="btn bA" onclick="qcmd('T60')" style="padding:5px 10px;font-size:8px">TBL-60</button>
+  <button class="btn bA" onclick="qcmd('RDTC')" style="padding:5px 10px;font-size:8px">RDTC</button>
+  <button class="btn bR" onclick="qcmd('CLRDTC')" style="padding:5px 10px;font-size:8px">CLRDTC</button>
+  <button class="btn bY" onclick="qcmd('KA')" style="padding:5px 10px;font-size:8px">KEEPALIVE</button>
+  <button class="btn bA" onclick="qcmd('FLASH')" style="padding:5px 10px;font-size:8px">FLASH-READ</button>
+</div>
+</div>
+</div>
+
+<!-- ════════════════════════════════ -->
+<!-- TAB: SPEC                       -->
+<!-- ════════════════════════════════ -->
+<div class="tc" id="t-spec">
+<div class="g2">
+<div>
+<div class="sec">
+<div class="pt ptA">HONDA K-LINE PROTOCOL SPEC (dari GitHub AutotronicCommunity)</div>
+<div style="font-family:'Share Tech Mono',monospace;font-size:10px;line-height:2;background:rgba(0,0,0,0.5);padding:12px;border:1px solid var(--b1)">
+<span style="color:var(--grn)">── INIT SEQUENCE ─────────────────</span><br>
+<span style="color:var(--ylw)">STEP 1:</span> Pull K-Line LOW selama 70ms<br>
+<span style="color:var(--ylw)">STEP 2:</span> K-Line HIGH selama 120ms<br>
+<span style="color:var(--ylw)">STEP 3:</span> Send WAKE: <span style="color:var(--acc)">FE 04 FF FF</span><br>
+<span style="color:var(--ylw)">STEP 4:</span> Wait 200ms<br>
+<span style="color:var(--ylw)">STEP 5:</span> Send INIT: <span style="color:var(--acc)">72 05 00 F0 99 F0</span><br>
+<span style="color:var(--ylw)">STEP 6:</span> ECU responds with: <span style="color:var(--grn)">02 04 00 FA</span><br>
+<br>
+<span style="color:var(--grn)">── REQUEST FORMAT ────────────────</span><br>
+<span style="color:var(--acc)">72 LEN 72 TABLE START END CS</span><br>
+<span style="color:var(--dim2)">72</span>    = Destination (ECU addr)<br>
+<span style="color:var(--dim2)">LEN</span>   = Total frame length including CS<br>
+<span style="color:var(--dim2)">72</span>    = Command type (read table)<br>
+<span style="color:var(--dim2)">TABLE</span> = Table number (00–FF)<br>
+<span style="color:var(--dim2)">START</span> = Start register<br>
+<span style="color:var(--dim2)">END</span>   = End register<br>
+<span style="color:var(--dim2)">CS</span>    = Checksum<br>
+<br>
+<span style="color:var(--grn)">── RESPONSE FORMAT ───────────────</span><br>
+<span style="color:var(--acc)">02 LEN 72 TABLE 00 [DATA...] CS</span><br>
+<span style="color:var(--dim2)">02</span>    = Source (ECU sends)<br>
+<span style="color:var(--dim2)">LEN</span>   = Length of full response<br>
+<span style="color:var(--dim2)">DATA</span>  = Sensor/calibration bytes<br>
+<br>
+<span style="color:var(--grn)">── CHECKSUM ──────────────────────</span><br>
+<span style="color:var(--acc)">CS = (0x100 - sum_of_all_bytes) & 0xFF</span><br>
+Contoh: 72+05+72+00+00+20 = 0x109<br>
+CS = 0x100 - 0x09 = <span style="color:var(--ylw)">0xF7</span><br>
+<br>
+<span style="color:var(--grn)">── KEEPALIVE ─────────────────────</span><br>
+Kirim setiap &lt;2.5 detik atau ECU sleep:<br>
+<span style="color:var(--acc)">72 05 72 00 00 8E</span><br>
+</div>
+</div>
+
+<div class="sec G">
+<div class="pt ptG">DATA TABLE REFERENCE</div>
+<table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px">
+  <tr style="background:rgba(0,0,0,0.3)"><th style="padding:4px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">TABLE</th><th style="padding:4px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">CONTENT</th><th style="padding:4px 8px;border:1px solid var(--b1);color:var(--dim2)">CMD</th></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x00</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">RPM, Speed, TPS, Battery</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 00 CS</td></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x10</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">ECT, IAT, MAP, O2 Sensor</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 10 CS</td></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x11</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Fuel trim, Injector PW, IGN</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 11 CS</td></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x17</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Extended data (beberapa ECU)</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 17 CS</td></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x60</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Extended RPM, load, lambda</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 60 CS</td></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--red)">0x73</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Read DTC codes</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 73 00 00 CS</td></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--red)">0x74</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Clear DTC codes</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 74 00 00 CS</td></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--pur)">0x76</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Flash read (FID mode)</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 07 76 ADDR_H ADDR_L LEN CS</td></tr>
+  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--pur)">0x77</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Flash write (FID mode)</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 XX 77 ADDR [DATA] CS</td></tr>
+</table>
+</div>
+</div>
+
+<div>
+<div class="sec P">
+<div class="pt ptP">REMAP WORKFLOW — CARA YANG BENAR</div>
+<div style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:2.2">
+<span style="color:var(--pur)">STEP 1:</span> <span style="color:var(--wht)">Connect ZEUS ke DLC motor</span><br>
+<span style="color:var(--pur)">STEP 2:</span> <span style="color:var(--wht)">READ FULL FLASH → simpan .bin original</span><br>
+<span style="color:var(--pur)">STEP 3:</span> <span style="color:var(--wht)">Buka .bin di TunerPro RT + XDF file</span><br>
+<span style="color:var(--pur)">STEP 4:</span> <span style="color:var(--wht)">Edit fuel map / ign map di TunerPro</span><br>
+<span style="color:var(--pur)">STEP 5:</span> <span style="color:var(--wht)">Save .bin hasil edit (TunerPro auto-fix CS)</span><br>
+<span style="color:var(--pur)">STEP 6:</span> <span style="color:var(--wht)">Load .bin ke app ini → WRITE FLASH</span><br>
+<span style="color:var(--pur)">STEP 7:</span> <span style="color:var(--wht)">VERIFY → test live data</span><br>
+<br>
+<span style="color:var(--ylw)">TOOLS GRATIS:</span><br>
+<span style="color:var(--acc)">TunerPro RT</span>  — tunerpro.net (gratis)<br>
+<span style="color:var(--acc)">XDF files</span>    — oldskulltuning.com (50 euro/ECU)<br>
+<span style="color:var(--acc)">HondaECU</span>     — mcuinnovations.com (gratis)<br>
+<span style="color:var(--acc)">MotoLink</span>      — github.com/fpoussin (gratis)<br>
+</div>
+</div>
+
+<div class="sec">
+<div class="pt ptA">ZEUS MST-100P CLONE PROTOCOL</div>
+<div style="font-family:'Share Tech Mono',monospace;font-size:10px;line-height:2;background:rgba(0,0,0,0.4);padding:10px;border:1px solid var(--b1)">
+<span style="color:var(--grn)">ZEUS hardware = CP2102 USB-UART bridge</span><br>
+Data dari ECU melewati ZEUS tanpa re-encoding.<br>
+Format data = <span style="color:var(--ylw)">Honda K-Line binary langsung</span><br>
+<br>
+Artinya aplikasi ini bisa:<br>
+<span style="color:var(--grn)">✓</span> Membaca semua data yang Zeus bisa baca<br>
+<span style="color:var(--grn)">✓</span> Kirim command ke ECU sama seperti Zeus<br>
+<span style="color:var(--grn)">✓</span> Flash read/write (Zeus MST tidak bisa!)<br>
+<span style="color:var(--grn)">✓</span> Custom remap table (Zeus tidak bisa!)<br>
+<span style="color:var(--grn)">✓</span> Real-time logging ke JSON/CSV<br>
+<span style="color:var(--ylw)">~</span> Actuator test (butuh command spesifik per model)<br>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<input type="file" id="bin-loader" accept=".bin" style="display:none" onchange="loadBinFile(this)">
 
 <script>
 // ══════════════════════════════════════════════
-// PRESETS — Watchlist IDX Penny Stocks
+// ZEUS PRO — ENGINE
 // ══════════════════════════════════════════════
-const PRESETS = {
-  penny:    ['GOTO','DEWA','BUMI','BIPI','ENRG','WINE','STRK','META','TOSH','BULL','MITI','AWAN','BLTZ','DNAR','BEKS','BHAT','FORU','GAMA','RUNS','SAFE','NASI','LCGP','MABA','BBSS','COAL','WIFI','SICO','MARI','PMMP','SMKL','DNAR','HATM','TPMA','SMIL'],
-  volatile: ['GOTO','BUMI','DEWA','STRK','META','BIPI','ENRG','MITI','AWAN','BLTZ','BULL','RUNS','TOSH','WINE','FORU'],
-  energy:   ['ADRO','BUMI','PTBA','ITMG','ENRG','DEWA','BIPI','MEDC','ELSA','AKRA','HRUM','MYOH','GEMS','KKGI','PSAB'],
-  infra:    ['WIKA','PTPP','WSKT','ADHI','JSMR','TLKM','ISAT','EXCL','TBIG','TOWR','LINK','CENT','FREN','SUPR'],
-  consumer: ['UNVR','ICBP','INDF','MYOR','CLEO','DLTA','ADES','ROTI','SKBM','ULTJ','KEJU','SIDO','KINO','CMRY'],
-  mining:   ['ANTM','PTBA','TINS','INCO','MDKA','AMMN','BUMI','ITMG','MITI','PSAB','CITA','DKFT','SMMT','CKRA'],
-  finance:  ['BBRI','BBCA','BMRI','BBNI','BNGA','BDMN','BNLI','BJTM','BJBR','BTPS','BBYB','AGRO','AMAR','ARTO','BANK'],
-  custom:   []
+
+const ECU_DB = {
+  k56: {pn:'38770-K56-N01',name:'Vario 150',type:'Keihin R8C',flash:57344,maxRpm:11000},
+  k45: {pn:'38770-K45N-NA1',name:'Vario 125',type:'Keihin H8C',flash:49152,maxRpm:10000},
+  k93: {pn:'38770-K93-N01',name:'Beat FI',type:'Keihin H8C',flash:49152,maxRpm:10000},
+  mkj: {pn:'38770-MKJ-D51',name:'CBR 150',type:'Keihin R8C',flash:57344,maxRpm:13000},
+  kyj: {pn:'38770-KYJ-922',name:'CBR 250',type:'Keihin R8C',flash:57344,maxRpm:14000},
+  k0j: {pn:'30400-K0J-N61',name:'PCX 160',type:'Shindengen V850',flash:262144,maxRpm:10000},
 };
 
-const SECTOR_MAP = {
-  GOTO:'Teknologi',BUMI:'Batubara',DEWA:'Energi',BIPI:'Minyak & Gas',ENRG:'Energi',
-  WINE:'Konsumer',STRK:'Infrastruktur',META:'Teknologi',TOSH:'Elektronik',
-  BULL:'Keuangan',MITI:'Pertambangan',AWAN:'Teknologi',BLTZ:'Media',
-  DNAR:'Kesehatan',BEKS:'Konstruksi',FORU:'Properti',GAMA:'Properti',
-  RUNS:'Transportasi',SAFE:'Keamanan',ADRO:'Batubara',PTBA:'Batubara',
-  ITMG:'Batubara',HRUM:'Batubara',ANTM:'Pertambangan',INCO:'Pertambangan',
-  TLKM:'Telekomunikasi',BBRI:'Perbankan',BBCA:'Perbankan',BMRI:'Perbankan',
-  BBNI:'Perbankan',PGAS:'Gas',MEDC:'Minyak',ELSA:'Oilfield Services',
-  WIKA:'Konstruksi',PTPP:'Konstruksi',WSKT:'Konstruksi',JSMR:'Tol',
-  UNVR:'FMCG',ICBP:'Makanan',INDF:'Makanan',MYOR:'Makanan',
+const DTC_DB = {
+  1:{name:'MAP Sensor',desc:'Manifold Absolute Pressure circuit malfunction',severity:'high'},
+  7:{name:'ECT Sensor',desc:'Engine coolant temperature out of range',severity:'med'},
+  8:{name:'TPS Circuit',desc:'Throttle position sensor signal fault',severity:'high'},
+  9:{name:'IAT Sensor',desc:'Intake air temperature circuit fault',severity:'low'},
+  11:{name:'VSS Circuit',desc:'Vehicle speed sensor signal missing',severity:'med'},
+  12:{name:'Injector',desc:'Injector circuit electrical fault',severity:'high'},
+  13:{name:'O2 Upstream',desc:'Oxygen sensor signal fault (upstream)',severity:'med'},
+  14:{name:'IACV',desc:'Idle air control valve circuit fault',severity:'med'},
+  21:{name:'O2 Heater',desc:'O2 sensor heater circuit fault',severity:'low'},
+  29:{name:'IACV Circuit',desc:'Idle air control valve operation fault',severity:'med'},
+  33:{name:'CAM Sensor',desc:'Camshaft position sensor circuit fault',severity:'high'},
+  52:{name:'CKP Sensor',desc:'Crankshaft position sensor fault',severity:'high'},
+  54:{name:'Fuel Pump',desc:'Fuel pump circuit fault',severity:'high'},
+  85:{name:'IACV2',desc:'Secondary idle air control valve fault',severity:'low'},
+  86:{name:'EGR Valve',desc:'Exhaust gas recirculation valve fault',severity:'low'},
+  88:{name:'EVAP',desc:'Evaporative emission control system fault',severity:'low'},
 };
 
-let curWatchlist = [...PRESETS.penny];
-let allData = [];
-let scanning = false;
+const CMD = {
+  WAKE:[0xFE,0x04,0xFF,0xFF],
+  INIT:[0x72,0x05,0x00,0xF0,0x99,0xF0],
+  KA:  [0x72,0x05,0x72,0x00,0x00,0x8E],
+  T00: [0x72,0x05,0x71,0x00,0x18,cs_([0x72,0x05,0x71,0x00,0x18])],
+  T10: [0x72,0x05,0x71,0x10,0x18,cs_([0x72,0x05,0x71,0x10,0x18])],
+  T11: [0x72,0x05,0x71,0x11,0x18,cs_([0x72,0x05,0x71,0x11,0x18])],
+  T60: [0x72,0x05,0x71,0x60,0x20,cs_([0x72,0x05,0x71,0x60,0x20])],
+  RDTC:[0x72,0x05,0x73,0x00,0x00,cs_([0x72,0x05,0x73,0x00,0x00])],
+  CLRDTC:[0x72,0x05,0x74,0x00,0x00,cs_([0x72,0x05,0x74,0x00,0x00])],
+  FLASH:[0x72,0x07,0x76,0x00,0x00,0x40,cs_([0x72,0x07,0x76,0x00,0x00,0x40])],
+};
 
-// ══════════════════════════════════════════════
-// CLOCK & MARKET STATUS
-// ══════════════════════════════════════════════
-function tick(){
-  const now = new Date();
-  const wib = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Jakarta'}));
-  document.getElementById('clk').textContent = wib.toTimeString().slice(0,8);
-  document.getElementById('clkd').textContent = wib.toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+function cs_(b){return(0x100-(b.reduce((a,x)=>a+x,0)&0xFF))&0xFF;}
 
-  const h=wib.getHours(), m=wib.getMinutes(), d=wib.getDay();
-  const wd=d>=1&&d<=5;
-  const inPre = wd && h===8 && m>=55;
-  const inSesi1 = wd && ((h===9)||(h>=10&&h<11)||(h===11&&m<30));
-  const inIstirahat = wd && ((h===11&&m>=30)||(h===12)||(h===13&&m<0));
-  const inSesi2 = wd && ((h>=13&&h<15)||(h===15&&m<50));
-  const isOpen = inSesi1||inSesi2;
+const S = {
+  port:null,reader:null,writer:null,
+  connected:false,demo:false,
+  rawBuf:[],flashBuf:[],
+  flashReading:false,
+  selectedEcu:'k56',
+  selCell:null,
+  fuelMap:null, ignMap:null,
+  histRpm:new Array(120).fill(0),
+  histO2:new Array(120).fill(0.45),
+  histTps:new Array(120).fill(0),
+  histInj:new Array(120).fill(0),
+  fc:0, fpsT:Date.now(),
+};
 
-  const el=document.getElementById('mkts');
-  const si=document.getElementById('session-info');
-  if(inPre){el.textContent='◎ PRE-MARKET';el.className='mkt-badge open';si.textContent='Sesi Pre-Opening (08:55)';}
-  else if(inSesi1){el.textContent='● MARKET OPEN';el.className='mkt-badge open';si.textContent='Sesi I: 09:00–11:30';}
-  else if(inIstirahat){el.textContent='◌ ISTIRAHAT';el.className='mkt-badge closed';si.textContent='Sesi Istirahat: 11:30–13:30';}
-  else if(inSesi2){el.textContent='● MARKET OPEN';el.className='mkt-badge open';si.textContent='Sesi II: 13:30–15:49';}
-  else{el.textContent='● CLOSED';el.className='mkt-badge closed';si.textContent=wd?'After Hours':'Weekend — Market Tutup';}
+// ── INIT ──
+document.addEventListener('DOMContentLoaded',()=>{
+  if(!('serial' in navigator)) el('serial-warn').style.display='block';
+  buildDTCRef();
+  buildMaps();
+  startOscope();
+  ecuChanged();
+});
+
+function ecuChanged(){
+  const m=el('ecu-model').value;
+  S.selectedEcu=m;
+  const e=ECU_DB[m]||ECU_DB.k56;
+  el('ei-pn').textContent=e.pn;
+  el('ei-type').textContent=e.type;
+  el('ei-flash').textContent=(e.flash/1024).toFixed(0)+' KB';
+  el('ei-proto').textContent='K-Line 10400 baud (Honda proprietary)';
 }
-setInterval(tick,1000); tick();
 
-// ══════════════════════════════════════════════
-// PRESET
-// ══════════════════════════════════════════════
-function setPreset(name,btn){
-  document.querySelectorAll('.pre').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  const ci=document.getElementById('f-custom');
-  if(name==='custom'){ci.focus();return;}
-  ci.value='';
-  curWatchlist=[...PRESETS[name]];
-  if(['penny','volatile'].includes(name)){
-    document.getElementById('f-price').value=100;
-    document.getElementById('f-price-min').value=1;
-  } else {
-    document.getElementById('f-price').value=9999;
-    document.getElementById('f-price-min').value=1;
-  }
-}
-
-// ══════════════════════════════════════════════
-// CORS PROXIES — rotasi otomatis
-// ══════════════════════════════════════════════
-const PROXIES = [
-  u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  u=>`https://thingproxy.freeboard.io/fetch/${u}`,
-];
-
-async function proxyFetch(url, idx=0){
-  if(idx>=PROXIES.length) throw new Error('All proxies exhausted');
+// ── CONNECT ──
+async function doConnect(){
+  if(!('serial' in navigator)){el('serial-warn').style.display='block';return;}
+  tlog('[CONNECT] Memulai deteksi ZEUS CP2102...','info');
   try{
-    const r=await fetch(PROXIES[idx](url),{signal:AbortSignal.timeout(9000)});
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    return await r.text();
-  } catch(e){
-    return proxyFetch(url, idx+1);
-  }
-}
+    const port=await navigator.serial.requestPort();
+    const info=port.getInfo();
+    const isCP2102=(info.usbVendorId===0x10C4);
+    el('ei-vid').textContent=`VID:${(info.usbVendorId||0).toString(16).toUpperCase()} PID:${(info.usbProductId||0).toString(16).toUpperCase()}`;
+    tlog(`[PORT] ${isCP2102?'✓ CP2102 Silicon Labs':'?? Unknown chip'} VID:${(info.usbVendorId||0).toString(16).toUpperCase()}`,'ok');
+    setPipe('p-usb','on','CP2102');
 
-// ══════════════════════════════════════════════
-// SOURCE 1: YAHOO FINANCE — Harga + Historis
-// ══════════════════════════════════════════════
-async function fetchYahoo(ticker){
-  const sym=ticker+'.JK';
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=90d&includePrePost=false`;
-  const txt=await proxyFetch(url);
-  const j=JSON.parse(txt);
-  const res=j?.chart?.result?.[0];
-  if(!res) throw new Error('Yahoo: no result');
-
-  const meta=res.meta;
-  const q=res.indicators?.quote?.[0];
-  const ts=res.timestamp||[];
-  const closes=[], vols=[], highs=[], lows=[], opens=[];
-  for(let i=0;i<(q?.close||[]).length;i++){
-    if(q.close[i]!=null){
-      closes.push(q.close[i]);
-      vols.push(q.volume?.[i]||0);
-      highs.push(q.high?.[i]||q.close[i]);
-      lows.push(q.low?.[i]||q.close[i]);
-      opens.push(q.open?.[i]||q.close[i]);
-    }
-  }
-  if(closes.length<10) throw new Error('Yahoo: data tidak cukup');
-
-  const price=meta.regularMarketPrice||closes[closes.length-1];
-  const prev=meta.chartPreviousClose||meta.previousClose||closes[closes.length-2]||price;
-  return {
-    source:'Yahoo',
-    price, prev,
-    change: price-prev,
-    changePct: ((price-prev)/prev)*100,
-    volLot: Math.round((meta.regularMarketVolume||vols[vols.length-1]||0)/100),
-    closes, vols, highs, lows, opens,
-    name: meta.longName||meta.shortName||ticker,
-    currency: meta.currency||'IDR',
-    dayHigh: meta.regularMarketDayHigh||Math.max(...highs.slice(-1)),
-    dayLow:  meta.regularMarketDayLow ||Math.min(...lows.slice(-1)),
-    week52H: meta.fiftyTwoWeekHigh||Math.max(...highs),
-    week52L: meta.fiftyTwoWeekLow ||Math.min(...lows),
-  };
-}
-
-// ══════════════════════════════════════════════
-// SOURCE 2: STOOQ — Cross-check harga
-// ══════════════════════════════════════════════
-async function fetchStooq(ticker){
-  try{
-    const url=`https://stooq.com/q/d/l/?s=${ticker.toLowerCase()}.jk&i=d`;
-    const txt=await proxyFetch(url);
-    const lines=txt.trim().split('\n').filter(l=>l&&!l.startsWith('Date'));
-    if(!lines.length) return null;
-    const last=lines[lines.length-1].split(',');
-    const price=parseFloat(last[4]);
-    if(isNaN(price)) return null;
-
-    const closes=lines.slice(-90).map(l=>{
-      const p=parseFloat(l.split(',')[4]);
-      return isNaN(p)?null:p;
-    }).filter(Boolean);
-
-    return {source:'Stooq', price, closes};
-  } catch(e){ return null; }
-}
-
-// ══════════════════════════════════════════════
-// FUSI DATA multi-source → pilih paling akurat
-// ══════════════════════════════════════════════
-async function fetchMultiSource(ticker){
-  const [yahoo, stooq] = await Promise.allSettled([
-    fetchYahoo(ticker),
-    fetchStooq(ticker)
-  ]);
-
-  const y = yahoo.status==='fulfilled' ? yahoo.value : null;
-  const s = stooq.status==='fulfilled' ? stooq.value : null;
-
-  if(!y&&!s) throw new Error('Semua sumber gagal');
-
-  let data = y || {price:s.price,closes:s.closes,change:0,changePct:0,volLot:0,name:ticker};
-
-  // Cross-validate harga
-  let crossValid = 'Single Source';
-  let confidence = 60;
-  if(y&&s){
-    const diff=Math.abs(y.price-s.price)/y.price*100;
-    if(diff<5){
-      crossValid='✓ Yahoo+Stooq Match';
-      confidence=90;
-    } else {
-      crossValid=`⚠ Diff ${diff.toFixed(1)}%`;
-      confidence=70;
-    }
-    // Extend history with Stooq if Yahoo has less data
-    if(s.closes.length > y.closes.length){
-      data.closes=[...s.closes.slice(0, s.closes.length-y.closes.length), ...y.closes];
-    }
-  } else if(y) { crossValid='Yahoo Only'; confidence=75; }
-  else { data={price:s.price,closes:s.closes,change:0,changePct:0,volLot:0,name:ticker}; crossValid='Stooq Only'; confidence=65; }
-
-  data.crossValid=crossValid;
-  data.confidence=confidence;
-  data.sources=(y?'Yahoo ':'')+(s?'Stooq':'');
-  return data;
-}
-
-// ══════════════════════════════════════════════
-// TECHNICAL ANALYSIS ENGINE
-// ══════════════════════════════════════════════
-function sma(arr,n){ if(arr.length<n)return null; const s=arr.slice(-n); return s.reduce((a,b)=>a+b,0)/n; }
-function ema(arr,n){
-  if(arr.length<n)return null;
-  const k=2/(n+1);
-  let e=arr.slice(0,n).reduce((a,b)=>a+b,0)/n;
-  for(let i=n;i<arr.length;i++) e=arr[i]*k+e*(1-k);
-  return e;
-}
-function rsi(arr,n=14){
-  if(arr.length<n+1)return 50;
-  let g=0,l=0;
-  for(let i=arr.length-n;i<arr.length;i++){
-    const d=arr[i]-arr[i-1];
-    if(d>0)g+=d; else l+=Math.abs(d);
-  }
-  const rs=(g/n)/((l/n)||0.0001);
-  return 100-(100/(1+rs));
-}
-function macd(arr){
-  const e12=ema(arr,12), e26=ema(arr,26);
-  if(!e12||!e26) return {macd:0,signal:0,hist:0};
-  const m=e12-e26;
-  // Simple signal approximation
-  const e12s=ema(arr.slice(0,-3),12)||e12;
-  const e26s=ema(arr.slice(0,-3),26)||e26;
-  const sig=(e12s-e26s)*0.85+m*0.15;
-  return {macd:m,signal:sig,hist:m-sig};
-}
-function boll(arr,n=20){
-  if(arr.length<n)return{upper:0,mid:0,lower:0,bw:0,pct:0};
-  const sl=arr.slice(-n);
-  const m=sl.reduce((a,b)=>a+b,0)/n;
-  const std=Math.sqrt(sl.map(v=>(v-m)**2).reduce((a,b)=>a+b,0)/n);
-  const up=m+2*std, lo=m-2*std;
-  const cur=arr[arr.length-1];
-  return {upper:up,mid:m,lower:lo,bw:(up-lo)/m*100,pct:(cur-lo)/(up-lo||1)*100};
-}
-function stoch(arr,n=14){
-  if(arr.length<n) return 50;
-  const sl=arr.slice(-n);
-  const lo=Math.min(...sl),hi=Math.max(...sl);
-  return hi===lo?50:(arr[arr.length-1]-lo)/(hi-lo)*100;
-}
-function atr(highs,lows,closes,n=14){
-  if(!highs||highs.length<n) return 0;
-  let trs=[];
-  for(let i=1;i<closes.length;i++){
-    const hl=highs[i]-lows[i];
-    const hc=Math.abs(highs[i]-closes[i-1]);
-    const lc=Math.abs(lows[i]-closes[i-1]);
-    trs.push(Math.max(hl,hc,lc));
-  }
-  return trs.slice(-n).reduce((a,b)=>a+b,0)/n;
-}
-function avgVol(vols,n=10){
-  if(!vols||vols.length<n) return 0;
-  return vols.slice(-n).reduce((a,b)=>a+b,0)/n;
-}
-
-// ══════════════════════════════════════════════
-// PROFIT SCORE ENGINE
-// ══════════════════════════════════════════════
-function calcProfitScore(price,closes,vols,highs,lows,changePct){
-  const ma5=sma(closes,5), ma10=sma(closes,10), ma20=sma(closes,20), ma50=sma(closes,50);
-  const ema12=ema(closes,12), ema26=ema(closes,26);
-  const r=rsi(closes), mc=macd(closes), bb=boll(closes), st=stoch(closes);
-  const av=avgVol(vols,10);
-  const curVol=vols[vols.length-1]||0;
-  const volRatio=av>0?curVol/av:1;
-  const atrVal=atr(highs||[],lows||[],closes);
-
-  let score=50;
-  const signals=[];
-
-  // ─── TREND SCORING ───
-  let trend='side';
-  if(ma5&&ma20&&ma50){
-    if(price>ma5&&ma5>ma20){
-      score+=12; signals.push({t:'MA5>MA20 Bullish',c:'bull'});
-      if(ma20>ma50){ score+=8; signals.push({t:'MA20>MA50',c:'bull'}); trend='up';}
-    } else if(price<ma5&&ma5<ma20){ score-=10; trend='down'; signals.push({t:'MA Bearish',c:'bear'}); }
-    if(ma5&&ma10&&ma5>ma10&&price>ma5) { score+=6; signals.push({t:'Short-Term Bullish',c:'bull'}); }
-  }
-  if(ma20&&price>ma20){ score+=7; if(trend!=='up') trend='up'; }
-  else if(ma20&&price<ma20){ score-=7; if(trend!=='down') trend='down'; }
-
-  // ─── RSI SCORING ───
-  if(r>=40&&r<=60){ score+=8; signals.push({t:`RSI Ideal ${r.toFixed(0)}`,c:'bull'}); }
-  else if(r<30){ score+=12; signals.push({t:`RSI Oversold ${r.toFixed(0)}`,c:'bull'}); }
-  else if(r<40){ score+=5; signals.push({t:`RSI Mendekati Beli ${r.toFixed(0)}`,c:'neu'}); }
-  else if(r>70){ score-=12; signals.push({t:`RSI Overbought ${r.toFixed(0)}`,c:'bear'}); }
-  else if(r>65){ score-=5; signals.push({t:`RSI Tinggi ${r.toFixed(0)}`,c:'neu'}); }
-
-  // ─── MACD SCORING ───
-  if(mc.hist>0&&mc.macd>0){ score+=10; signals.push({t:'MACD Bullish Cross',c:'bull'}); }
-  else if(mc.hist>0&&mc.macd<0){ score+=5; signals.push({t:'MACD Diverge Up',c:'neu'}); }
-  else if(mc.hist<0){ score-=8; signals.push({t:'MACD Bearish',c:'bear'}); }
-
-  // ─── BOLLINGER SCORING ───
-  if(bb.pct<20){ score+=10; signals.push({t:'Di Bawah BB Lower',c:'bull'}); }
-  else if(bb.pct<35){ score+=6; signals.push({t:'BB Zone Beli',c:'bull'}); }
-  else if(bb.pct>80){ score-=8; signals.push({t:'BB Overbought Zone',c:'bear'}); }
-
-  // ─── STOCHASTIC SCORING ───
-  if(st<20){ score+=9; signals.push({t:`Stoch Oversold ${st.toFixed(0)}`,c:'bull'}); }
-  else if(st<30){ score+=5; signals.push({t:`Stoch Murah ${st.toFixed(0)}`,c:'bull'}); }
-  else if(st>80){ score-=8; signals.push({t:`Stoch Overbought ${st.toFixed(0)}`,c:'bear'}); }
-
-  // ─── VOLUME SCORING ───
-  if(volRatio>2&&changePct>0){ score+=12; signals.push({t:`Vol Surge ${volRatio.toFixed(1)}x ▲`,c:'bull'}); }
-  else if(volRatio>1.5&&changePct>0){ score+=8; signals.push({t:`Vol Tinggi ${volRatio.toFixed(1)}x`,c:'bull'}); }
-  else if(volRatio>2&&changePct<0){ score-=8; signals.push({t:`Vol Dump ${volRatio.toFixed(1)}x ▼`,c:'bear'}); }
-  else if(volRatio<0.5){ score-=4; signals.push({t:'Vol Sepi',c:'neu'}); }
-
-  // ─── PRICE ACTION SCORING ───
-  if(changePct>3){ score+=8; signals.push({t:`Breakout +${changePct.toFixed(1)}%`,c:'bull'}); }
-  else if(changePct>1){ score+=4; signals.push({t:`Naik ${changePct.toFixed(1)}%`,c:'bull'}); }
-  else if(changePct<-3){ score-=8; signals.push({t:`Breakdown ${changePct.toFixed(1)}%`,c:'bear'}); }
-
-  // ─── SUPPORT/RESISTANCE ───
-  const recent=closes.slice(-20);
-  const support=Math.min(...recent);
-  const resistance=Math.max(...recent);
-  const distToRes=(resistance-price)/price*100;
-  const distToSup=(price-support)/price*100;
-  if(distToSup<3){ score+=8; signals.push({t:'Dekat Support',c:'bull'}); }
-  if(distToRes>10){ score+=6; signals.push({t:`Ruang Naik ${distToRes.toFixed(0)}%`,c:'bull'}); }
-
-  // ─── TARGET PRICE ───
-  const targetPct = Math.max(5, Math.min(40,
-    (distToRes * 0.6) + (r<40?10:0) + (mc.hist>0?5:0) + (volRatio>1.5?5:0)
-  ));
-  const targetPrice = price * (1 + targetPct/100);
-  const stopLoss = price * (1 - Math.max(3, distToSup*0.5)/100);
-
-  score = Math.max(0, Math.min(100, Math.round(score)));
-
-  // ─── PROFIT TIER ───
-  let tier='C', tierNote='';
-  if(score>=78&&trend==='up'){ tier='S'; tierNote='⭐ PRIME PICK'; }
-  else if(score>=65&&trend==='up'){ tier='A'; tierNote='High Potential'; }
-  else if(score>=50){ tier='B'; tierNote='Monitor'; }
-  else { tier='C'; tierNote='Low Priority'; }
-
-  // ─── RECOMMENDATION ───
-  let rec,recCode;
-  if(score>=75&&trend==='up'){ rec='STRONG BUY'; recCode='sb'; }
-  else if(score>=60&&trend!=='down'){ rec='BUY'; recCode='b'; }
-  else if(score>=40){ rec='HOLD'; recCode='h'; }
-  else if(score>=25){ rec='SELL'; recCode='s'; }
-  else{ rec='STRONG SELL'; recCode='ss'; }
-
-  return {
-    ma5:ma5?.toFixed(0)||'-', ma10:ma10?.toFixed(0)||'-',
-    ma20:ma20?.toFixed(0)||'-', ma50:ma50?.toFixed(0)||'-',
-    rsi:r.toFixed(1), macd:mc.hist.toFixed(2), macdLine:mc.macd.toFixed(2),
-    bb, stoch:st.toFixed(1), volRatio:volRatio.toFixed(2),
-    atr:atrVal.toFixed(2), trend,
-    score, tier, tierNote, signals:signals.slice(0,6),
-    rec, recCode,
-    support:support.toFixed(0), resistance:resistance.toFixed(0),
-    targetPrice:targetPrice.toFixed(0), targetPct:targetPct.toFixed(1),
-    stopLoss:stopLoss.toFixed(0),
-    distToRes:distToRes.toFixed(1)
-  };
-}
-
-// ══════════════════════════════════════════════
-// MAIN SCAN
-// ══════════════════════════════════════════════
-async function runScan(){
-  if(scanning) return;
-  scanning=true;
-
-  const btn=document.getElementById('scan-btn');
-  const progEl=document.getElementById('prog');
-  const pfEl=document.getElementById('pf');
-  const pdEl=document.getElementById('pd');
-  const ptEl=document.getElementById('pt');
-  const ppEl=document.getElementById('pp');
-  const plogEl=document.getElementById('plog');
-  const sumEl=document.getElementById('sum');
-  const tbEl=document.getElementById('tb');
-  const resEl=document.getElementById('results');
-
-  btn.disabled=true;
-  progEl.className='prog show';
-  sumEl.className='sum';
-  tbEl.className='tb';
-  resEl.innerHTML='';
-  allData=[];
-  plogEl.innerHTML='';
-
-  const customRaw=document.getElementById('f-custom').value.trim();
-  const watchlist=customRaw
-    ? customRaw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean)
-    : curWatchlist;
-
-  const maxPrice=parseFloat(document.getElementById('f-price').value)||100;
-  const minPrice=parseFloat(document.getElementById('f-price-min').value)||1;
-  const minVol=parseInt(document.getElementById('f-vol').value)||0;
-  const minRsi=parseFloat(document.getElementById('f-rsi-min').value)||0;
-  const maxRsi=parseFloat(document.getElementById('f-rsi-max').value)||100;
-  const minScore=parseFloat(document.getElementById('f-score').value)||0;
-  const trendF=document.getElementById('f-trend').value;
-  const recF=document.getElementById('f-rec').value;
-
-  ptEl.textContent=watchlist.length;
-
-  function log(msg,cls=''){
-    const d=document.createElement('div');
-    d.className='lg'+(cls?' '+cls:'');
-    d.textContent=msg;
-    plogEl.appendChild(d);
-    plogEl.scrollTop=plogEl.scrollHeight;
-    // Keep only last 8 lines
-    while(plogEl.children.length>8) plogEl.removeChild(plogEl.firstChild);
-  }
-
-  log(`🔍 Scanning ${watchlist.length} saham — Multi-Source: Yahoo Finance + Stooq`,'in');
-  log(`📊 Filter: Harga Rp${minPrice}-${maxPrice} | RSI ${minRsi}-${maxRsi} | Min Score: ${minScore}`,'in');
-
-  let done=0;
-  const BATCH=3; // parallel requests
-
-  for(let i=0;i<watchlist.length;i+=BATCH){
-    const batch=watchlist.slice(i,i+BATCH);
-
-    await Promise.all(batch.map(async ticker=>{
+    // Baud sweep
+    el('baud-section').style.display='block';
+    const bauds=[38400,115200,57600,9600];
+    let connected=false;
+    for(const b of bauds){
+      addBaudRow(b,'testing');
       try{
-        log(`⏳ Fetching ${ticker}.JK ...`);
-        const raw=await fetchMultiSource(ticker);
-        const ta=calcProfitScore(
-          raw.price, raw.closes, raw.vols||[],
-          raw.highs||null, raw.lows||null, raw.changePct||0
-        );
-
-        // ─ Apply Filters ─
-        if(raw.price<minPrice||raw.price>maxPrice){
-          log(`⊘ ${ticker}: Harga Rp${raw.price.toFixed(0)} diluar range`,'sk'); return;
+        await port.open({baudRate:b,dataBits:8,stopBits:1,parity:'none'});
+        const w=port.writable.getWriter();
+        await w.write(new Uint8Array(CMD.WAKE));
+        w.releaseLock();
+        await delay(500);
+        const r=port.readable.getReader();
+        const res=await Promise.race([r.read(),delay(700).then(()=>({value:null}))]);
+        r.releaseLock();
+        if(res.value&&res.value.length>0){
+          addBaudRow(b,'ok');
+          tlog(`[BAUD] ✓ ${b} baud — ECU merespons!`,'ok');
+          S.detectedBaud=b;
+          connected=true;
+          break;
         }
-        if(raw.volLot<minVol){
-          log(`⊘ ${ticker}: Vol ${raw.volLot} lot < min ${minVol}`,'sk'); return;
-        }
-        const rsiNum=parseFloat(ta.rsi);
-        if(rsiNum<minRsi||rsiNum>maxRsi){
-          log(`⊘ ${ticker}: RSI ${ta.rsi} diluar range`,'sk'); return;
-        }
-        if(ta.score<minScore){
-          log(`⊘ ${ticker}: Score ${ta.score} < min ${minScore}`,'sk'); return;
-        }
-        if(trendF!=='all'&&ta.trend!==trendF){
-          log(`⊘ ${ticker}: Trend ${ta.trend} ≠ ${trendF}`,'sk'); return;
-        }
-        if(recF==='buy'&&!['sb','b'].includes(ta.recCode)){ return; }
-        if(recF==='hold'&&ta.recCode!=='h'){ return; }
+        addBaudRow(b,'fail');
+        await port.close();
+      }catch(e){addBaudRow(b,'fail');try{await port.close();}catch(e2){}}
+    }
+    if(!connected){
+      S.detectedBaud=38400;
+      if(!port.readable) await port.open({baudRate:38400,dataBits:8,stopBits:1,parity:'none'});
+    }
 
-        const result={
-          ticker, name:raw.name, sector:SECTOR_MAP[ticker]||'Lainnya',
-          price:raw.price, change:raw.change||0, changePct:raw.changePct||0,
-          volLot:raw.volLot||0, dayHigh:raw.dayHigh||raw.price, dayLow:raw.dayLow||raw.price,
-          week52H:raw.week52H||raw.price, week52L:raw.week52L||raw.price,
-          crossValid:raw.crossValid||'—', confidence:raw.confidence||60,
-          sources:raw.sources||'—',
-          ...ta
-        };
+    S.port=port; S.connected=true; S.demo=false;
+    el('ei-baud').textContent=S.detectedBaud+' baud';
+    el('ei-stat').textContent='ONLINE';
+    el('ei-stat').style.color='var(--grn)';
+    el('btn-con').style.display='none';
+    el('btn-dis').style.display='inline-block';
+    setPipe('p-zeus','on','K-LINE');
+    setTopMode('ONLINE');
 
-        allData.push(result);
-        log(`✓ ${ticker}: Rp${raw.price.toFixed(0)} | ${ta.trend.toUpperCase()} | Score:${ta.score} | RSI:${ta.rsi} | Tier:${ta.tier}`,'ok');
+    await initECU();
+    startRead();
+    startPolling();
+    startFps();
 
-      } catch(e){
-        log(`✗ ${ticker}: ${e.message}`,'er');
-      }
-    }));
-
-    done+=batch.length;
-    pdEl.textContent=Math.min(done,watchlist.length);
-    const pct=Math.round(done/watchlist.length*100);
-    ppEl.textContent=pct;
-    pfEl.style.width=pct+'%';
+  }catch(e){
+    tlog('[ERR] '+e.message,'err');
+    tlog('[TIP] Pastikan driver CP2102 terinstall → Device Manager → Ports (COM&LPT)','warn');
   }
-
-  // Sort by profit score desc
-  allData.sort((a,b)=>b.score-a.score);
-  renderAll(allData);
-  renderSum(allData);
-  sumEl.className='sum show';
-  tbEl.className='tb show';
-
-  const found=allData.length;
-  const tierSA=allData.filter(s=>['S','A'].includes(s.tier)).length;
-  log(`✅ Selesai! ${found} saham lulus filter. Tier S/A: ${tierSA} saham.`,'in');
-
-  btn.disabled=false;
-  scanning=false;
 }
 
-// ══════════════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════════════
-function renderAll(arr){
-  const el=document.getElementById('results');
-  el.innerHTML='';
-  if(!arr.length){
-    el.innerHTML='<div class="empty">Tidak ada saham yang memenuhi filter.<br>Coba kurangi Min Score atau longgarkan filter RSI/Trend.</div>';
+async function initECU(){
+  tlog('[INIT] Mengirim Honda K-Line init sequence...','info');
+  await writeB(CMD.WAKE);
+  await delay(200);
+  await writeB(CMD.INIT);
+  await delay(500);
+  setPipe('p-ecu','on','ECU OK');
+  tlog('[INIT] ✓ Init sequence selesai','ok');
+  setInterval(()=>{if(S.connected&&!S.demo)writeB(CMD.KA);},2500);
+}
+
+function startPolling(){
+  const tbls=[CMD.T00,CMD.T10,CMD.T11];
+  let i=0;
+  setInterval(()=>{if(S.connected&&!S.demo)writeB(tbls[i++%tbls.length]);},220);
+}
+
+async function startRead(){
+  if(!S.port?.readable) return;
+  const r=S.port.readable.getReader();S.reader=r;
+  try{
+    while(true){
+      const{value,done}=await r.read();
+      if(done) break;
+      S.rawBuf.push(...value);
+      processBuf();
+    }
+  }catch(e){if(S.connected)tlog('[RX ERR] '+e.message,'err');}
+  finally{r.releaseLock();}
+}
+
+function processBuf(){
+  while(S.rawBuf.length>=4){
+    // Try Honda frame
+    const len=S.rawBuf[1];
+    if(len<4||len>64){S.rawBuf.shift();continue;}
+    if(S.rawBuf.length<len) break;
+    const f=S.rawBuf.splice(0,len);
+    if(cs_(f.slice(0,-1))===f[f.length-1]){
+      parseFrame(f);S.fc++;
+    } else {
+      // Try ASCII
+      const a=f.map(b=>String.fromCharCode(b)).join('');
+      if(/RPM|TPS|ECT|SPEED/i.test(a)){parseASCII(a);S.fc++;}
+      else tlog(`[RX] ${toHex(f)}`,'rx');
+    }
+  }
+}
+
+function parseFrame(f){
+  const table=f[3], data=f.slice(5,f.length-1);
+  tlog(`[RX] ${toHex(f)} | TBL:${table.toString(16).toUpperCase()} LEN:${data.length}`,'rx');
+  if(table===0x00||table===0x60) tbl00(data);
+  else if(table===0x10||table===0x11) tbl10(data);
+  else if(f[2]===0x73) parseDTC(data);
+  else if(table===0x76) handleFlashData(data);
+}
+
+function parseASCII(s){
+  const m={};s.split(',').forEach(p=>{const[k,v]=p.split(':');if(k&&v)m[k.trim().toUpperCase()]=parseFloat(v);});
+  if(m.RPM) updRPM(m.RPM);
+  if(m.SPEED) updVal('d-spd',Math.round(m.SPEED));
+  if(m.TPS) updVal('d-tps',Math.round(m.TPS)+'%');
+  if(m.ECT) updVal('d-ect',Math.round(m.ECT)+'°C');
+}
+
+function tbl00(d){
+  if(d.length<2) return;
+  const rpm=((d[0]<<8)|d[1])*0.25; updRPM(rpm);
+  if(d[2]) updVal('d-spd',d[2]);
+  if(d[4]) updVal('d-tps',Math.round(d[4]*100/255)+'%',d[4]/255);
+  if(d[6]) {updVal('d-bat',(d[6]*18/255).toFixed(1)+'V');}
+  if(d[0]&&d[1]) prRow('pr-rpm',((d[0]<<8)|d[1]).toString(16).toUpperCase(),Math.round(rpm)+' rpm');
+  if(d[2]) prRow('pr-spd',d[2].toString(16).toUpperCase(),d[2]+' km/h');
+}
+
+function tbl10(d){
+  if(d[0]!==undefined){const t=d[0]-40;updVal('d-ect',t+'°C');sbFill('sb-ect',(t+40)/200);prRow('pr-ect',d[0].toString(16),t+'°C');}
+  if(d[1]!==undefined){const t=d[1]-40;updVal('d-iat',t+'°C');sbFill('sb-iat',(t+40)/200);prRow('pr-iat',d[1].toString(16),t+'°C');}
+  if(d[2]!==undefined){updVal('d-map',d[2]+' kPa');sbFill('sb-map',d[2]/120);prRow('pr-map',d[2].toString(16),d[2]+' kPa');}
+  if(d[3]!==undefined){const v=(d[3]*5/255).toFixed(3);updVal('d-o2',v+'V');sbFill('sb-o2',d[3]/255);prRow('pr-o2',d[3].toString(16),v+'V');S.histO2.push(parseFloat(v));S.histO2.shift();}
+  if(d[4]!==undefined){updVal('d-inj',(d[4]*0.1).toFixed(1)+'ms');S.histInj.push(d[4]*0.1);S.histInj.shift();}
+  if(d[5]!==undefined){const stft=((d[5]-128)*100/128).toFixed(1);updVal('d-stft',(stft>0?'+':'')+stft+'%');}
+  if(d[6]!==undefined){updVal('d-lam',(d[6]/100).toFixed(3));sbFill('sb-lam',d[6]/150);}
+  if(d[7]!==undefined){const ltft=((d[7]-128)*100/128).toFixed(1);updVal('d-ltft',(ltft>0?'+':'')+ltft+'%');}
+  if(d[8]!==undefined){updVal('d-ign',((d[8]/2)-64).toFixed(1)+'°');}
+}
+
+function parseDTC(data){
+  const codes=data.filter(b=>b>0&&DTC_DB[b]);
+  const dl=el('dtc-list');
+  dl.innerHTML='';
+  if(codes.length===0){
+    dl.innerHTML='<div style="color:var(--grn);font-family:\'Share Tech Mono\',monospace;font-size:11px;padding:10px">✓ No Fault Codes — ECU CLEAR</div>';
+    el('top-dtc').textContent='DTC: 0';el('top-dtc').style.color='var(--grn)';
     return;
   }
-  arr.forEach((s,i)=>el.appendChild(buildCard(s,i+1)));
-}
-
-function buildCard(s,rank){
-  const tCls=s.trend==='up'?'up':s.trend==='down'?'down':'side';
-  const chgCls=s.changePct>=0?'pos':'neg';
-  const chgSign=s.changePct>=0?'+':'';
-  const sCls=s.score>=65?'h':s.score>=40?'m':'l';
-  const rsiNum=parseFloat(s.rsi);
-  const rsiColor=rsiNum>70?'var(--red)':rsiNum<30?'var(--green)':'var(--accent)';
-  const confColor=s.confidence>=85?'var(--green)':s.confidence>=70?'var(--gold)':'var(--red)';
-  const scoreColor=s.score>=65?'var(--green)':s.score>=40?'var(--gold)':'var(--red)';
-
-  const sigHTML=(s.signals||[]).map(sg=>`<span class="sig ${sg.c}">${sg.t}</span>`).join('');
-
-  const card=document.createElement('div');
-  card.className=`card ${tCls} tier-${s.tier.toLowerCase()}`;
-  card.style.animationDelay=`${(rank-1)*0.04}s`;
-  card.dataset.ticker=s.ticker;
-  card.dataset.score=s.score;
-  card.dataset.price=s.price;
-  card.dataset.change=s.changePct;
-  card.dataset.rsi=rsiNum;
-  card.dataset.vol=s.volLot;
-  card.dataset.target=parseFloat(s.targetPct);
-  card.dataset.trend=s.trend;
-
-  card.innerHTML=`
-    <span class="tier-flag ${s.tier}">${s.tier} ${s.tierNote}</span>
-
-    <div class="c-rank"><span>${rank}</span>#</div>
-
-    <div class="c-info">
-      <div class="ticker">${s.ticker}.JK</div>
-      <div class="name">${s.name||s.ticker}</div>
-      <span class="sector">${s.sector}</span>
-      <br>
-      <a class="stockbit-link" href="https://stockbit.com/#/symbol/${s.ticker}" target="_blank" rel="noopener">
-        📈 Buka Stockbit
-      </a>
-    </div>
-
-    <div class="c-ind">
-      <div class="sigs">${sigHTML||'<span class="sig info">Analyzing...</span>'}</div>
-      <div class="ta-grid">
-        <div class="ta-item"><span class="ta-v">${s.ma5}</span><span class="ta-l">MA5</span></div>
-        <div class="ta-item"><span class="ta-v">${s.ma10}</span><span class="ta-l">MA10</span></div>
-        <div class="ta-item"><span class="ta-v">${s.ma20}</span><span class="ta-l">MA20</span></div>
-        <div class="ta-item"><span class="ta-v">${s.ma50}</span><span class="ta-l">MA50</span></div>
-        <div class="ta-item"><span class="ta-v" style="color:${rsiColor}">${s.rsi}</span><span class="ta-l">RSI</span></div>
-        <div class="ta-item"><span class="ta-v">${s.stoch}</span><span class="ta-l">Stoch</span></div>
-        <div class="ta-item"><span class="ta-v">${s.macd}</span><span class="ta-l">MACD</span></div>
-        <div class="ta-item"><span class="ta-v">${s.volRatio}x</span><span class="ta-l">Vol/Avg</span></div>
-      </div>
-      <div class="score-wrap">
-        <span class="score-n" style="color:${scoreColor}">${s.score}</span>
-        <div class="score-bar"><div class="score-fill-bar ${sCls}" style="width:${s.score}%"></div></div>
-        <span class="score-sub">S:${s.support} R:${s.resistance} | BB:${s.bb?.pct?.toFixed(0)||'?'}%</span>
-      </div>
-      <div class="confidence">
-        <span class="conf-dot" style="background:${confColor}"></span>
-        Data: ${s.sources} | Validasi: ${s.crossValid} | Confidence: ${s.confidence}%
-      </div>
-    </div>
-
-    <div class="c-price">
-      <div class="price-big">Rp ${s.price<10?s.price.toFixed(2):s.price.toFixed(0)}</div>
-      <div class="price-chg ${chgCls}">${chgSign}${s.changePct.toFixed(2)}%</div>
-      <div class="price-meta">
-        H: ${s.dayHigh?.toFixed(0)||'?'} / L: ${s.dayLow?.toFixed(0)||'?'}<br>
-        52W H: ${s.week52H?.toFixed(0)||'?'}<br>
-        Vol: ${(s.volLot||0).toLocaleString('id')} lot<br>
-        ATR: ${s.atr}
-      </div>
-      <div class="target-price">
-        🎯 Target: Rp${s.targetPrice}<br>
-        +${s.targetPct}% | SL: Rp${s.stopLoss}
-      </div>
-    </div>
-
-    <div class="c-act">
-      <span class="rec ${s.recCode}">${s.rec}</span>
-      <div class="rsi-mini">RSI ${s.rsi}</div>
-      <div class="rsi-mini-bar">
-        <div class="rsi-mini-fill" style="width:${rsiNum}%;background:${rsiColor};"></div>
-      </div>
-      <div style="font-size:8px;color:var(--text2);margin-top:5px;">${s.trend.toUpperCase()}</div>
-      <div style="font-size:8px;color:var(--text2);margin-top:3px;">Ruang: +${s.distToRes}%</div>
-    </div>
-  `;
-  return card;
-}
-
-function renderSum(arr){
-  document.getElementById('s0').textContent=arr.length;
-  document.getElementById('s1').textContent=arr.filter(s=>s.trend==='up').length;
-  document.getElementById('s2').textContent=arr.filter(s=>s.trend==='down').length;
-  document.getElementById('s3').textContent=arr.filter(s=>['sb','b'].includes(s.recCode)).length;
-  document.getElementById('s4').textContent=arr.filter(s=>['S','A'].includes(s.tier)).length;
-  const avg=arr.length?Math.round(arr.reduce((a,b)=>a+b.score,0)/arr.length):0;
-  document.getElementById('s5').textContent=avg;
-  const avgT=arr.length?(arr.reduce((a,b)=>a+parseFloat(b.targetPct||0),0)/arr.length).toFixed(1):0;
-  document.getElementById('s6').textContent='+'+avgT+'%';
-}
-
-// ══════════════════════════════════════════════
-// SORT & SEARCH
-// ══════════════════════════════════════════════
-function doSort(by,btn){
-  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  const sorted=[...allData].sort((a,b)=>{
-    if(by==='score') return b.score-a.score;
-    if(by==='target') return parseFloat(b.targetPct)-parseFloat(a.targetPct);
-    if(by==='price') return a.price-b.price;
-    if(by==='change') return b.changePct-a.changePct;
-    if(by==='rsi') return parseFloat(a.rsi)-parseFloat(b.rsi);
-    if(by==='vol') return b.volLot-a.volLot;
-    return 0;
+  codes.forEach(c=>{
+    const d=DTC_DB[c]||{name:'Unknown',desc:'Unknown fault code'};
+    const col=d.severity==='high'?'var(--red)':d.severity==='med'?'var(--ylw)':'var(--txt)';
+    dl.innerHTML+=`<div class="dtc-item">
+      <span class="dtc-mil">MIL-${c}</span>
+      <span class="dtc-desc"><span style="color:var(--wht)">${d.name}</span><br><span style="font-size:10px">${d.desc}</span></span>
+      <span class="dtc-stat" style="border-color:${col};color:${col}">${d.severity.toUpperCase()}</span>
+    </div>`;
   });
-  renderAll(sorted);
+  el('top-dtc').textContent=`DTC: ${codes.length}`;el('top-dtc').style.color='var(--red)';
 }
 
-function doSearch(q){
-  document.querySelectorAll('.card').forEach(c=>{
-    c.style.display=(c.dataset.ticker||'').toLowerCase().includes(q.toLowerCase())?'grid':'none';
+// ── FLASH ──
+async function startFlashRead(){
+  if(!S.connected&&!S.demo){tlog('[ERR] Belum connect ke ECU','err');return;}
+  S.flashBuf=[];S.flashReading=true;
+  setPipe('p-flash','warn','READING');
+  el('flash-pb').style.display='block';
+  tlog('[FLASH] Memulai baca flash memory ECU...','info');
+  const ecu=ECU_DB[S.selectedEcu];
+  const totalBytes=ecu.flash;
+  let read=0;
+  while(read<totalBytes){
+    const chunk=Math.min(64,totalBytes-read);
+    const addrH=(read>>8)&0xFF, addrL=read&0xFF;
+    const req=[0x72,0x09,0x76,addrH,addrL,0x00,chunk,0x00];
+    req.push(cs_(req));
+    if(S.connected&&!S.demo) await writeB(req);
+    else {
+      // Demo: generate fake flash
+      for(let i=0;i<chunk;i++) S.flashBuf.push(Math.round(Math.random()*255));
+      read+=chunk;
+    }
+    await delay(S.demo?5:50);
+    if(!S.demo) read+=chunk;
+    const pct=Math.round(read/totalBytes*100);
+    el('flash-fill').style.width=pct+'%';
+    el('flash-pct').textContent=pct+'%';
+    el('flash-status').textContent=`${read} / ${totalBytes} bytes (0x${read.toString(16).toUpperCase()})`;
+    if(pct%10===0) renderHexView();
+  }
+  S.flashReading=false;
+  setPipe('p-flash','on','FLASH OK');
+  tlog(`[FLASH] ✓ Read complete! ${S.flashBuf.length} bytes`,'ok');
+  renderHexView();
+  el('flash-size').textContent=`Size: ${S.flashBuf.length} bytes (${(S.flashBuf.length/1024).toFixed(1)} KB)`;
+  const total=S.flashBuf.reduce((a,b)=>a+b,0);
+  el('flash-cs').textContent=`Checksum: 0x${(total&0xFFFF).toString(16).toUpperCase()}`;
+}
+
+function handleFlashData(data){
+  S.flashBuf.push(...data);
+  renderHexView();
+}
+
+function renderHexView(){
+  const hv=el('flash-hex');
+  if(S.flashBuf.length===0) return;
+  let html='';
+  const max=Math.min(S.flashBuf.length,512);
+  for(let i=0;i<max;i+=16){
+    const addr=`<span class="addr">${i.toString(16).toUpperCase().padStart(4,'0')}:</span> `;
+    const row=S.flashBuf.slice(i,i+16);
+    const hex=row.map(b=>`<span class="hexb">${b.toString(16).toUpperCase().padStart(2,'0')}</span>`).join(' ');
+    const asc=row.map(b=>`<span class="ascii">${b>=32&&b<127?String.fromCharCode(b):'.'}</span>`).join('');
+    html+=`${addr}${hex}  ${asc}\n`;
+  }
+  if(S.flashBuf.length>512) html+=`<span style="color:var(--dim2)">... ${S.flashBuf.length-512} bytes more (showing first 512)</span>`;
+  hv.innerHTML=html;
+}
+
+function saveFlash(){
+  if(S.flashBuf.length===0){tlog('[ERR] Flash kosong, baca dulu','err');return;}
+  const blob=new Blob([new Uint8Array(S.flashBuf)],{type:'application/octet-stream'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const pn=ECU_DB[S.selectedEcu].pn.replace(/[^a-zA-Z0-9]/g,'_');
+  a.download=`${pn}_backup_${Date.now()}.bin`;
+  a.click();
+  tlog('[SAVE] ✓ Flash disimpan sebagai .bin file','ok');
+}
+
+function loadFlash(){el('bin-loader').click();}
+
+function loadBinFile(input){
+  const f=input.files[0];if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    S.flashBuf=Array.from(new Uint8Array(e.target.result));
+    tlog(`[LOAD] ✓ ${f.name} (${S.flashBuf.length} bytes) loaded`,'ok');
+    renderHexView();
+    el('flash-size').textContent=`Size: ${S.flashBuf.length} bytes`;
+  };
+  r.readAsArrayBuffer(f);
+}
+
+async function writeFlash(){
+  if(S.flashBuf.length===0){tlog('[ERR] Tidak ada data flash untuk ditulis','err');return;}
+  if(!confirm('⚠ PERINGATAN: Ini akan menulis flash ke ECU. Pastikan ini bukan ECU motor yang sedang dipakai! Lanjutkan?')) return;
+  tlog('[WRITE] Memulai flash write...','warn');
+  el('write-pb').style.display='block';
+  for(let i=0;i<S.flashBuf.length;i+=32){
+    const chunk=S.flashBuf.slice(i,i+32);
+    const addrH=(i>>8)&0xFF,addrL=i&0xFF;
+    const req=[0x72,0x07+chunk.length,0x77,addrH,addrL,...chunk];
+    req.push(cs_(req));
+    if(S.connected&&!S.demo) await writeB(req);
+    await delay(20);
+    const pct=Math.round(i/S.flashBuf.length*100);
+    el('write-fill').style.width=pct+'%';
+    el('write-pct').textContent=pct+'%';
+  }
+  tlog('[WRITE] ✓ Flash write complete!','ok');
+}
+
+async function verifyFlash(){tlog('[VERIFY] Baca ulang dan compare... (demo mode)','info');await startFlashRead();}
+
+function readTable(){
+  const t=prompt('Masukkan nomor table (hex): e.g. 00, 10, 11, 60');
+  if(!t) return;
+  const tbl=parseInt(t,16);
+  const req=[0x72,0x05,0x71,tbl,0x18];
+  req.push(cs_(req));
+  writeB(req);
+  tlog(`[TX] Read table 0x${tbl.toString(16).toUpperCase()}`,'tx');
+}
+
+// ── REMAP MAPS ──
+const RPM_AXIS=[500,1000,1500,2000,2500,3000,4000,5000,6000,7000,8000,10000];
+const MAP_AXIS=[20,30,40,50,60,70,80,90,100];
+
+function buildMaps(){
+  // Fuel map
+  S.fuelMap=Array(MAP_AXIS.length).fill(null).map((_,r)=>
+    Array(RPM_AXIS.length).fill(null).map((_,c)=>{
+      const rpmFactor=c/RPM_AXIS.length;
+      const loadFactor=r/MAP_AXIS.length;
+      return Math.round(110+loadFactor*40+rpmFactor*20+Math.sin(rpmFactor*3)*5);
+    })
+  );
+  // Ign map
+  S.ignMap=Array(MAP_AXIS.length).fill(null).map((_,r)=>
+    Array(RPM_AXIS.length).fill(null).map((_,c)=>{
+      return Math.round(10+c*1.5+r*0.5);
+    })
+  );
+  renderMap('fuel-map-wrap',S.fuelMap,'fuel');
+  renderMap('ign-map-wrap',S.ignMap,'ign');
+}
+
+function renderMap(containerId,data,type){
+  const cont=el(containerId);
+  const axis=RPM_AXIS;
+  let html='<table class="map-tbl"><tr><th>kPa\\RPM</th>';
+  axis.forEach(r=>html+=`<th>${r}</th>`);
+  html+='</tr>';
+  MAP_AXIS.forEach((kpa,ri)=>{
+    html+=`<tr><th>${kpa}</th>`;
+    data[ri].forEach((v,ci)=>{
+      const heat=type==='fuel'?(v>148?'hot':v>138?'warm':'cool'):
+                               (v>25?'hot':v>15?'warm':'cool');
+      html+=`<td class="${heat}" onclick="selectCell('${type}',${ri},${ci},${v})">${v}</td>`;
+    });
+    html+='</tr>';
   });
+  html+='</table>';
+  cont.innerHTML=html;
+}
+
+function selectCell(type,r,c,v){
+  S.selCell={type,r,c};
+  const label=`${type.toUpperCase()} [${MAP_AXIS[r]} kPa × ${RPM_AXIS[c]} RPM]`;
+  el('sel-cell-label').textContent=label;
+  el('cell-val').value=v;
+  const map=type==='fuel'?S.fuelMap:S.ignMap;
+  map.forEach(row=>row.forEach((_,ci)=>{}));
+}
+
+function setCellVal(){
+  if(!S.selCell) return;
+  const v=parseInt(el('cell-val').value);
+  if(isNaN(v)||v<0||v>255) return;
+  const map=S.selCell.type==='fuel'?S.fuelMap:S.ignMap;
+  map[S.selCell.r][S.selCell.c]=v;
+  renderMap(S.selCell.type==='fuel'?'fuel-map-wrap':'ign-map-wrap',map,S.selCell.type);
+  tlog(`[REMAP] ${S.selCell.type.toUpperCase()} [${MAP_AXIS[S.selCell.r]}kPa×${RPM_AXIS[S.selCell.c]}rpm] → ${v}`,'ok');
+}
+
+function applyGlobalTrim(){
+  const pct=parseFloat(el('global-trim').value)/100;
+  if(isNaN(pct)) return;
+  S.fuelMap=S.fuelMap.map(row=>row.map(v=>Math.max(0,Math.min(255,Math.round(v*(1+pct))))));
+  renderMap('fuel-map-wrap',S.fuelMap,'fuel');
+  tlog(`[REMAP] Global fuel trim +${Math.round(pct*100)}% applied to all cells`,'ok');
+}
+
+function slUpdate(id,v,unit){el('sv-'+id).textContent=v;}
+
+async function applyRemap(){
+  const idle=parseInt(el('sl-idle').value);
+  const fuel=parseInt(el('sl-fuel').value);
+  const ign=parseFloat(el('sl-ign').value);
+  const lam=parseFloat(el('sl-lam').value);
+  const rpmLim=parseInt(el('sl-rpm').value);
+
+  el('remap-queue').innerHTML='Queue: applying...';
+  tlog('[REMAP] Mengirim parameter remap ke ECU...','warn');
+
+  // Idle RPM command (Honda specific)
+  const idleRaw=Math.round(idle/0.25);
+  const idleCmd=[0x72,0x07,0x7A,0x00,0x00,(idleRaw>>8)&0xFF,idleRaw&0xFF];
+  idleCmd.push(cs_(idleCmd));
+  if(S.connected&&!S.demo) await writeB(idleCmd);
+  tlog(`[REMAP] Idle RPM → ${idle} rpm`,'ok');
+
+  // Fuel trim (apply to all map cells)
+  if(fuel!==0){
+    const factor=1+(fuel/100);
+    S.fuelMap=S.fuelMap.map(row=>row.map(v=>Math.max(0,Math.min(255,Math.round(v*factor)))));
+    renderMap('fuel-map-wrap',S.fuelMap,'fuel');
+    tlog(`[REMAP] Fuel trim ${fuel>0?'+':''}${fuel}% applied`,'ok');
+  }
+
+  // Ignition advance
+  if(ign!==0){
+    S.ignMap=S.ignMap.map(row=>row.map(v=>Math.max(0,Math.min(255,Math.round(v+(ign*2))))));
+    renderMap('ign-map-wrap',S.ignMap,'ign');
+    tlog(`[REMAP] Ignition ${ign>0?'+':''}${ign}° applied`,'ok');
+  }
+
+  el('remap-queue').innerHTML=`Queue: <span style="color:var(--grn)">✓ Semua parameter applied</span>`;
+  tlog('[REMAP] ✓ Remap selesai — cek live data!','ok');
+}
+
+function resetRemap(){buildMaps();tlog('[REMAP] Maps di-reset ke stock baseline','warn');}
+
+function saveRemapProfile(){
+  const profile={ecu:S.selectedEcu,timestamp:new Date().toISOString(),
+    params:{idle:el('sl-idle').value,fuel:el('sl-fuel').value,ign:el('sl-ign').value,lam:el('sl-lam').value,rpm:el('sl-rpm').value},
+    fuelMap:S.fuelMap,ignMap:S.ignMap};
+  const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='remap_profile.json';a.click();
+  tlog('[SAVE] ✓ Remap profile saved','ok');
+}
+
+// ── DTC ──
+function readDTC(){
+  if(S.connected&&!S.demo) writeB(CMD.RDTC);
+  else parseDTC([7,13,0,0]);
+  tlog('[DTC] Read DTC command sent','info');
+}
+
+function clearDTC(){
+  if(!confirm('Clear semua DTC codes?')) return;
+  if(S.connected&&!S.demo) writeB(CMD.CLRDTC);
+  tlog('[DTC] Clear DTC command sent','warn');
+  el('dtc-list').innerHTML='<div style="color:var(--grn);font-family:\'Share Tech Mono\',monospace;padding:10px">✓ DTC Cleared</div>';
+  el('top-dtc').textContent='DTC: 0';el('top-dtc').style.color='var(--dim2)';
+}
+
+function freezeDTC(){
+  const snap=`FREEZE [${new Date().toLocaleTimeString()}] RPM:${el('rpm-txt').textContent} ECT:${el('d-ect').textContent} TPS:${el('d-tps').textContent} MAP:${el('d-map').textContent}`;
+  tlog('[FREEZE] '+snap,'ok');
+}
+
+function buildDTCRef(){
+  const ref=el('dtc-ref');
+  let html='';
+  Object.entries(DTC_DB).forEach(([code,d])=>{
+    const col=d.severity==='high'?'var(--red)':d.severity==='med'?'var(--ylw)':'var(--txt)';
+    html+=`<div class="dtc-item"><span class="dtc-mil" style="color:${col}">MIL-${code}</span><span class="dtc-desc"><span style="color:var(--wht)">${d.name}</span><br>${d.desc}</span><span class="badge" style="border-color:${col};color:${col}">${d.severity}</span></div>`;
+  });
+  ref.innerHTML=html;
+}
+
+// ── DEMO ──
+function doDemo(){
+  S.demo=true;S.connected=true;
+  setPipe('p-usb','warn','DEMO');setPipe('p-zeus','warn','SIM');setPipe('p-ecu','on','SIM ECU');
+  el('btn-con').style.display='none';el('btn-dis').style.display='inline-block';
+  el('ei-stat').textContent='DEMO MODE';el('ei-stat').style.color='var(--ylw)';
+  setTopMode('DEMO');
+  tlog('[DEMO] Simulasi Honda Keihin ECU aktif','warn');
+
+  let t=0;
+  setInterval(()=>{
+    if(!S.connected) return;
+    t+=0.06;
+    const rpm=Math.max(850,2800+Math.sin(t)*2000+Math.sin(t*3.3)*300+(Math.random()-0.5)*80);
+    updRPM(rpm);
+    const spd=Math.max(0,Math.round(rpm/40+Math.sin(t*0.4)*20));
+    const tps=Math.max(3,Math.round(22+Math.sin(t)*22));
+    const ect=Math.round(82+Math.sin(t*0.06)*8);
+    const iat=Math.round(32+Math.sin(t*0.04)*10);
+    const map=Math.round(50+Math.sin(t*1.1)*28);
+    const o2=(0.45+Math.sin(t*5)*0.35).toFixed(3);
+    const bat=(14.1+Math.sin(t*0.09)*0.3).toFixed(1);
+    const inj=(2.8+Math.sin(t)*0.9).toFixed(2);
+    const ign=(12+Math.sin(t*1.2)*5).toFixed(1);
+    const stft=(Math.sin(t*2.1)*7).toFixed(1);
+
+    updVal('d-spd',spd);updVal('d-tps',tps+'%',tps/100);
+    updVal('d-ect',ect+'°C');sbFill('sb-ect',(ect+40)/200);
+    updVal('d-iat',iat+'°C');sbFill('sb-iat',(iat+40)/200);
+    updVal('d-map',map+' kPa');sbFill('sb-map',map/120);
+    updVal('d-o2',o2+'V');sbFill('sb-o2',parseFloat(o2)/5);
+    updVal('d-bat',bat+'V');
+    updVal('d-inj',inj+'ms');
+    updVal('d-ign',ign+'°');
+    updVal('d-stft',(stft>0?'+':'')+stft+'%');
+    updVal('d-lam',(1+parseFloat(stft)/100).toFixed(3));sbFill('sb-lam',0.5+parseFloat(stft)/200);
+    updVal('d-gear',Math.min(6,Math.max(1,Math.round(rpm/1200))).toString());
+    el('top-ect').textContent=ect+'°C';
+
+    S.histO2.push(parseFloat(o2));S.histO2.shift();
+    S.histTps.push(tps);S.histTps.shift();
+    S.histInj.push(parseFloat(inj));S.histInj.shift();
+    S.fc++;
+  },180);
+}
+
+// ── DISCONN ──
+function doDisc(){
+  S.connected=false;
+  try{S.reader?.cancel();}catch(e){}
+  try{S.port?.close();}catch(e){}
+  S.port=S.reader=null;
+  ['p-usb','p-zeus','p-ecu','p-flash'].forEach(id=>setPipe(id,'off',''));
+  setTopMode('OFFLINE');
+  el('btn-con').style.display='inline-block';el('btn-dis').style.display='none';
+  el('ei-stat').textContent='OFFLINE';el('ei-stat').style.color='var(--dim2)';
+  tlog('[DISC] Koneksi diputus','warn');
+}
+
+// ── TERMINAL ──
+function tlog(msg,type='info'){
+  const col={info:'#2a6080',ok:'#00cc66',warn:'#bb9900',err:'#cc2244',tx:'#00aacc',rx:'#aa5500'};
+  const tm=new Date().toTimeString().slice(0,8);
+  const t=el('term-out');
+  t.innerHTML+=`<div style="color:${col[type]||col.info}">[${tm}] ${msg}</div>`;
+  t.scrollTop=t.scrollHeight;
+  const lines=t.querySelectorAll('div');
+  if(lines.length>120) lines[0].remove();
+}
+
+function clrTerm(){el('term-out').innerHTML='';}
+
+function sendRaw(){
+  const v=el('t-inp').value.trim();
+  if(!v) return;
+  const bytes=v.split(/\s+/).map(b=>parseInt(b,16)).filter(b=>!isNaN(b));
+  if(bytes.length) writeB(bytes);
+  el('t-inp').value='';
+}
+
+function qcmd(name){
+  const map={WAKE:CMD.WAKE,INIT:CMD.INIT,T00:CMD.T00,T10:CMD.T10,T11:CMD.T11,T60:CMD.T60,RDTC:CMD.RDTC,CLRDTC:CMD.CLRDTC,KA:CMD.KA,FLASH:CMD.FLASH};
+  if(map[name]){writeB(map[name]);tlog(`[TX] ${name}: ${toHex(map[name])}`,'tx');}
+}
+
+// ── WRITE ──
+async function writeB(bytes){
+  if(S.port?.writable&&!S.demo){
+    try{const w=S.port.writable.getWriter();await w.write(new Uint8Array(bytes));w.releaseLock();}
+    catch(e){tlog('[TX ERR] '+e.message,'err');return;}
+  }
+  tlog(`[TX] ${toHex(bytes)}`,'tx');
+}
+
+// ── OSCOPE ──
+function startOscope(){
+  setInterval(drawOscope,100);
+}
+
+function drawOscope(){
+  drawCv('cv-rpm',S.histRpm,0,ECU_DB[S.selectedEcu]?.maxRpm||11000,'var(--grn)');
+  drawCv('cv-o2',S.histO2,0,1,'var(--ylw)');
+  drawCv('cv-tps',S.histTps,0,100,'var(--org)');
+  drawCv('cv-inj',S.histInj,0,10,'var(--acc)');
+}
+
+function drawCv(id,data,min,max,col){
+  const cv=el(id);if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const w=cv.width,h=cv.height;
+  ctx.fillStyle='rgba(4,8,12,0.8)';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+  for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(0,h/4*i);ctx.lineTo(w,h/4*i);ctx.stroke();}
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;
+  ctx.shadowColor=col;ctx.shadowBlur=4;
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=i/data.length*w;
+    const y=h-(v-min)/(max-min)*h;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();ctx.shadowBlur=0;
+}
+
+// ── FPS ──
+function startFps(){
+  setInterval(()=>{const fps=Math.round(S.fc/((Date.now()-S.fpsT)/1000));S.fc=0;S.fpsT=Date.now();el('top-rpm').textContent=el('rpm-txt').textContent+' RPM';},1000);
+}
+
+// ── HELPERS ──
+function el(id){return document.getElementById(id);}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+function toHex(b){return b.map(x=>x.toString(16).padStart(2,'0').toUpperCase()).join(' ');}
+
+function updRPM(rpm){
+  const ecu=ECU_DB[S.selectedEcu];const maxRpm=ecu?.maxRpm||11000;
+  const pct=Math.min(rpm/maxRpm,1);
+  el('rpm-txt').textContent=Math.round(rpm).toLocaleString();
+  el('rpm-arc').style.strokeDashoffset=392*(1-pct);
+  const c=rpm>maxRpm*0.85?'var(--red)':rpm>maxRpm*0.65?'var(--ylw)':'var(--grn)';
+  el('rpm-txt').setAttribute('fill',c.replace('var(','').replace(')',''));
+  el('top-rpm').textContent=Math.round(rpm)+' RPM';
+  S.histRpm.push(rpm);S.histRpm.shift();
+}
+
+function updVal(id,val){const e=el(id);if(e)e.textContent=val;}
+function sbFill(id,pct){const e=el(id);if(e)e.style.width=Math.max(0,Math.min(100,pct*100))+'%';}
+function prRow(id,raw,val){const r=el(id);if(!r)return;const cells=r.querySelectorAll('td');if(cells[1])cells[1].textContent=raw;if(cells[2])cells[2].textContent=val;}
+
+function setPipe(id,state,label){
+  const d=el(id);if(!d)return;
+  const l=el(id+'-l');
+  d.className='pdot '+(state==='on'?'on':state==='warn'?'warn':state==='err'?'err':'');
+  if(l&&label)l.textContent=label;
+  if(l)l.style.color=state==='on'?'var(--grn)':state==='warn'?'var(--ylw)':state==='err'?'var(--red)':'var(--dim2)';
+}
+
+function setTopMode(m){el('top-mode').textContent=m;el('top-mode').style.color=m==='ONLINE'?'var(--grn)':m==='DEMO'?'var(--ylw)':'var(--dim2)';}
+
+function addBaudRow(b,state){
+  let r=el('br-'+b);
+  if(!r){r=document.createElement('div');r.id='br-'+b;r.className='pb';
+    r.innerHTML=`<div class="pb-row"><span style="font-family:'Share Tech Mono',monospace;font-size:10px">${b} baud</span><span id="bs-${b}" style="font-family:'Share Tech Mono',monospace;font-size:10px">testing...</span></div><div class="pb-bar"><div class="pb-fill" id="bf-${b}" style="width:35%;background:var(--ylw)"></div></div>`;
+    el('baud-rows').appendChild(r);}
+  if(state==='ok'){el('bf-'+b).style.cssText='width:100%;background:var(--grn)';el('bs-'+b).style.color='var(--grn)';el('bs-'+b).textContent='✓ RESPONSE OK';}
+  if(state==='fail'){el('bf-'+b).style.cssText='width:100%;background:var(--red)';el('bs-'+b).style.color='var(--red)';el('bs-'+b).textContent='✗ no resp';}
+}
+
+function sw(btn,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('a'));
+  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('a'));
+  btn.classList.add('a');el(id).classList.add('a');
 }
 </script>
 </body>
