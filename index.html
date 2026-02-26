@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZEUS MASTER PRO — Honda Keihin ECU Remap + Bypass</title>
+<title>ZEUS MASTER PRO v5 — Zeus MST-100P Full Bridge</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;800&family=Orbitron:wght@700;900&display=swap');
 
@@ -181,7 +181,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="logo">ZEUS<span>PRO</span></div>
+  <div class="logo">ZEUS<span>PRO</span><span style="font-size:8px;color:var(--org);margin-left:6px;letter-spacing:1px">v5•MST100P</span></div>
   <div class="conn-bar">
     <div class="pipenode"><div class="pdot" id="p-usb"></div><span id="p-usb-l" style="color:var(--dim2)">CP2102</span></div>
     <span class="parr">→</span>
@@ -232,9 +232,54 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 </div>
 
 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-  <button class="btn bA" id="btn-con" onclick="doConnect()">⚡ CONNECT</button>
+  <button class="btn bA" id="btn-con" onclick="doConnect()">⚡ AUTO CONNECT</button>
   <button class="btn bR" id="btn-dis" style="display:none" onclick="doDisc()">✕ DISCONNECT</button>
   <button class="btn bY" onclick="doDemo()">▷ DEMO MODE</button>
+</div>
+
+<!-- ══ ZEUS MST-100P MANUAL BRIDGE PANEL v5 ══ -->
+<div style="background:rgba(0,30,10,0.6);border:1px solid rgba(0,255,136,0.25);padding:12px;margin-bottom:10px;border-radius:2px">
+  <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--grn);margin-bottom:10px">
+    ⚡ ZEUS MST-100P — MANUAL BRIDGE SELECTOR
+  </div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2);margin-bottom:8px;line-height:1.8">
+    Klik AUTO CONNECT dulu. Jika semua baud <span style="color:var(--red)">no resp</span> → klik tombol di bawah satu per satu:
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:10px">
+    <button onclick="bridgeConnect('C9_STD')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#051a0a;border:1px solid #00cc55;color:#00ff88;cursor:pointer;text-align:left">
+      <span style="color:var(--grn);font-weight:bold">① C9 STANDARD</span><br>
+      <span style="font-size:9px;color:var(--dim2)">10400 • LOW 250ms</span>
+    </button>
+    <button onclick="bridgeConnect('C9_SLOW')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#1a1500;border:1px solid #ccaa00;color:#ffcc00;cursor:pointer;text-align:left">
+      <span style="color:var(--ylw);font-weight:bold">② C9 ULTRA SLOW</span><br>
+      <span style="font-size:9px;color:var(--dim2)">10400 • LOW 500ms</span>
+    </button>
+    <button onclick="bridgeConnect('C9_ALT')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#1a0a00;border:1px solid #cc6600;color:#ff7700;cursor:pointer;text-align:left">
+      <span style="color:var(--org);font-weight:bold">③ C9 ALT BYTES</span><br>
+      <span style="font-size:9px;color:var(--dim2)">10400 • init alt</span>
+    </button>
+    <button onclick="bridgeConnect('PASS38')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#00101a;border:1px solid #0099cc;color:#00d4ff;cursor:pointer;text-align:left">
+      <span style="color:var(--acc);font-weight:bold">④ PASSTHROUGH</span><br>
+      <span style="font-size:9px;color:var(--dim2)">38400 • no prefix</span>
+    </button>
+    <button onclick="bridgeConnect('RAW')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#0f0015;border:1px solid #8833cc;color:#aa44ff;cursor:pointer;text-align:left">
+      <span style="color:var(--pur);font-weight:bold">⑤ RAW BYPASS</span><br>
+      <span style="font-size:9px;color:var(--dim2)">10400 • skip init</span>
+    </button>
+    <button onclick="bridgeConnect('WAKEONLY')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#1a0005;border:1px solid #cc0033;color:#ff2244;cursor:pointer;text-align:left">
+      <span style="color:var(--red);font-weight:bold">⑥ WAKE ONLY</span><br>
+      <span style="font-size:9px;color:var(--dim2)">10400 • wake+poll</span>
+    </button>
+  </div>
+  <div style="background:rgba(0,0,0,0.5);border:1px solid var(--b1);padding:8px;font-family:'Share Tech Mono',monospace;font-size:9px;line-height:2;color:var(--dim2)">
+    <span style="color:var(--ylw)">⚠ WAJIB CEK FISIK SEBELUM CONNECT:</span><br>
+    <span style="color:#ffffff">①</span> Zeus MST-100P terhubung ke USB laptop<br>
+    <span style="color:#ffffff">②</span> Kabel DLC terpasang ke soket ECU/trainer (klik terkunci)<br>
+    <span style="color:#ffffff">③</span> Power supply <span style="color:var(--red)">12V trainer ON</span> (LED hijau nyala)<br>
+    <span style="color:#ffffff">④</span> Terminal <span style="color:var(--red)">IG (ignition) +12V</span> — ukur multimeter ke GND harus 11-13V<br>
+    <span style="color:#ffffff">⑤</span> Tunggu <span style="color:var(--grn)">3-5 detik</span> setelah IG ON → baru klik connect
+  </div>
+  <div id="bridge-status" style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:10px;display:none;padding:6px;border:1px solid var(--b1)"></div>
 </div>
 
 <div id="baud-section" style="display:none">
@@ -834,48 +879,90 @@ function ecuChanged(){
 
 // ── ECU PROFILE: timing & init bytes per model/SW series ──
 const ECU_PROFILES = {
-  // SW C9 series: Sonic 150, CBR 150R, Vario 150 gen2 (K56-N01 A3xx)
+  // ══ C9 STANDARD — Zeus MST-100P kompensasi latency 50ms ══
   'C9': {
-    name:      'Keihin C9 Series (Sonic150/CBR150/Vario150 gen2)',
-    baud:      10400,
-    lowMs:     200,   // pull K-Line LOW duration ms
-    highMs:    200,   // K-Line HIGH idle ms
-    wakeDelay: 300,   // delay after WAKE ms
-    initDelay: 600,   // delay after INIT ms
-    prefix:    [0xBF,0x00,0x04,0x04,0xFE],  // prefix sebelum WAKE untuk C9
-    wake:      [0xFE,0x04,0xFF,0xFF],
-    init:      [0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout: 1200,
+    name:'C9 Standard (Sonic150/CBR150/Vario150)',
+    baud:10400, lowMs:200, highMs:200, wakeDelay:300, initDelay:600,
+    prefix:[0xBF,0x00,0x04,0x04,0xFE],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout:1200,
   },
-  // Standard K-Line: Vario125 (K45), Beat (K93), PCX, dll
+  // ══ C9 STANDARD dengan Zeus latency kompensasi ══
+  'C9_STD': {
+    name:'C9 STD Zeus Bridge (250ms)',
+    baud:10400, lowMs:250, highMs:250, wakeDelay:400, initDelay:800,
+    prefix:[0xBF,0x00,0x04,0x04,0xFE],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout:2500,
+  },
+  // ══ C9 ULTRA SLOW — untuk Zeus MST-100P yang lambat ══
+  'C9_SLOW': {
+    name:'C9 Ultra Slow Zeus (500ms)',
+    baud:10400, lowMs:500, highMs:500, wakeDelay:600, initDelay:1200,
+    prefix:[0xBF,0x00,0x04,0x04,0xFE],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout:3500,
+  },
+  // ══ C9 ALT — init bytes alternatif dari komunitas ══
+  'C9_ALT': {
+    name:'C9 Alt Init Bytes (B0 01)',
+    baud:10400, lowMs:250, highMs:250, wakeDelay:400, initDelay:800,
+    prefix:[0xBF,0x00,0x04,0x04,0xFE],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0xB0,0x01,0x18,0x3A],
+    respTimeout:2500,
+  },
+  // ══ PASSTHROUGH 38400 — beberapa Zeus clone pakai ini ══
+  'PASS38': {
+    name:'Passthrough 38400 Zeus Clone',
+    baud:38400, lowMs:50, highMs:100, wakeDelay:100, initDelay:400,
+    prefix:[],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout:1500,
+  },
+  // ══ RAW BYPASS — skip slow init, langsung kirim data ══
+  'RAW': {
+    name:'Raw Bypass (skip slow-init)',
+    baud:10400, lowMs:0, highMs:0, wakeDelay:200, initDelay:500,
+    prefix:[0xBF,0x00,0x04,0x04,0xFE],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout:2000,
+  },
+  // ══ WAKE ONLY — hanya kirim wake, lalu langsung poll ══
+  'WAKEONLY': {
+    name:'Wake Only + Direct Poll',
+    baud:10400, lowMs:100, highMs:100, wakeDelay:150, initDelay:300,
+    prefix:[],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0x71,0x00,0x18,0x00],
+    respTimeout:2000,
+  },
+  // ══ STANDARD K-Line ══
   'STD': {
-    name:      'Keihin Standard K-Line (Vario125/Beat/PCX)',
-    baud:      10400,
-    lowMs:     70,
-    highMs:    120,
-    wakeDelay: 60,
-    initDelay: 400,
-    prefix:    [],
-    wake:      [0xFE,0x04,0xFF,0xFF],
-    init:      [0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout: 900,
+    name:'Standard K-Line (Vario125/Beat/PCX)',
+    baud:10400, lowMs:70, highMs:120, wakeDelay:60, initDelay:400,
+    prefix:[],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout:900,
   },
-  // CBR250 / PCX160 / newer models — high speed K-Line
+  // ══ HIGH SPEED ══
   'HSP': {
-    name:      'Keihin High Speed (CBR250/PCX160)',
-    baud:      38400,
-    lowMs:     25,
-    highMs:    60,
-    wakeDelay: 50,
-    initDelay: 300,
-    prefix:    [],
-    wake:      [0xFE,0x04,0xFF,0xFF],
-    init:      [0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout: 700,
+    name:'High Speed K-Line (CBR250/PCX160)',
+    baud:38400, lowMs:25, highMs:60, wakeDelay:50, initDelay:300,
+    prefix:[],
+    wake:[0xFE,0x04,0xFF,0xFF],
+    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout:700,
   },
 };
 
-// Deteksi profile dari SW version string
+// Deteksi profile// Deteksi profile dari SW version string
 function detectProfile(swVer) {
   if (!swVer) return 'C9'; // default untuk K56-N01 yang kita miliki
   const upper = swVer.toUpperCase();
@@ -884,27 +971,37 @@ function detectProfile(swVer) {
   return 'STD';
 }
 
-// ── SLOW INIT via CP2102 ──
+// ── SLOW INIT v5 — Zeus MST-100P Optimized ──
 async function doSlowInit(port, profile) {
-  const prof = ECU_PROFILES[profile] || ECU_PROFILES['C9'];
-  tlog(`[SLOW-INIT] Profile: ${prof.name}`,'info');
-  tlog(`[SLOW-INIT] Pull K-Line LOW ${prof.lowMs}ms...`,'info');
+  const prof = ECU_PROFILES[profile] || ECU_PROFILES['C9_STD'];
+  tlog(`[INIT] Profile: ${prof.name} | ${prof.baud} baud`,'info');
 
-  // Step 1: K-Line LOW — kirim 0x00 bytes selama lowMs
-  // Pada baud 10400: 1 byte = ~0.96ms → nLow = lowMs / 0.96
-  const nLow = Math.max(1, Math.ceil(prof.baud * (prof.lowMs/1000) / 10));
-  const wLow = port.writable.getWriter();
-  await wLow.write(new Uint8Array(nLow).fill(0x00));
-  wLow.releaseLock();
-  await delay(prof.lowMs);
+  // Skip slow-init jika lowMs=0 (RAW mode)
+  if(prof.lowMs === 0){
+    tlog('[INIT] RAW mode — skip slow-init','warn');
+    await flushRxAll(port, 200);
+  } else {
+    // STEP 1: Flush semua buffer — penting untuk Zeus MST-100P
+    await flushRxAll(port, 200);
+    await delay(80);
 
-  // Step 2: K-Line HIGH — idle (tidak kirim apapun)
-  tlog(`[SLOW-INIT] K-Line HIGH ${prof.highMs}ms (idle)...`,'info');
-  await delay(prof.highMs);
-  await delay(30); // stabilisasi
+    // STEP 2: K-Line LOW — kirim 0x00 terus selama lowMs
+    // Zeus MST-100P: pakai lebih banyak bytes untuk pastikan ECU detect LOW
+    const nLow = Math.max(8, Math.ceil(prof.baud * (prof.lowMs/1000) / 8));
+    tlog(`[INIT] K-Line LOW ${prof.lowMs}ms (${nLow} bytes @ ${prof.baud})...`,'info');
+    const wLow = port.writable.getWriter();
+    await wLow.write(new Uint8Array(nLow).fill(0x00));
+    wLow.releaseLock();
+    await delay(prof.lowMs + 50); // +50ms buffer Zeus
 
-  // Step 3: Flush RX buffer
-  await flushRx(port, 100);
+    // STEP 3: K-Line HIGH idle — diam, tidak kirim apa-apa
+    tlog(`[INIT] K-Line HIGH idle ${prof.highMs}ms...`,'info');
+    await delay(prof.highMs + 50); // +50ms buffer Zeus
+
+    // STEP 4: Flush echo bytes dari Zeus bridge
+    await flushRxAll(port, 180);
+    await delay(50);
+  }
 
   // Step 4: Prefix packet (khusus C9 series)
   if (prof.prefix && prof.prefix.length > 0) {
@@ -934,41 +1031,59 @@ async function doSlowInit(port, profile) {
   await delay(prof.initDelay);
 }
 
-// Flush/drain RX buffer
+// Flush/drain RX buffer — versi v5 multi-drain
 async function flushRx(port, timeoutMs) {
+  return flushRxAll(port, timeoutMs);
+}
+async function flushRxAll(port, timeoutMs=200) {
   if (!port.readable) return;
-  const r = port.readable.getReader();
-  try {
-    await Promise.race([r.read(), delay(timeoutMs).then(()=>null)]);
-  } catch(e) {}
-  finally { try { r.releaseLock(); } catch(e) {} }
+  const deadline = Date.now() + timeoutMs;
+  let total = 0;
+  while(Date.now() < deadline){
+    const r = port.readable.getReader();
+    try {
+      const left = deadline - Date.now();
+      const res = await Promise.race([
+        r.read(),
+        delay(Math.min(left, 80)).then(()=>({value:null,done:false}))
+      ]);
+      if(res && res.value && res.value.length > 0){ total += res.value.length; }
+      else { r.releaseLock(); break; }
+      r.releaseLock();
+    } catch(e){ try{r.releaseLock();}catch(e2){} break; }
+  }
+  if(total > 0) tlog(`[FLUSH] Cleared ${total} bytes from RX buffer`,'info');
 }
 
-// Baca respon ECU dan cek valid
+// Baca respon ECU v5 — toleran Zeus MST-100P latency
 async function readEcuResp(port, timeoutMs) {
-  if (!port.readable) return { ok: false, bytes: [] };
-  const r = port.readable.getReader();
+  if (!port.readable) return { ok:false, bytes:[] };
+  const deadline = Date.now() + timeoutMs;
   let bytes = [];
-  try {
-    const res = await Promise.race([
-      r.read(),
-      delay(timeoutMs).then(()=>({ value: null }))
-    ]);
-    if (res && res.value && res.value.length > 0) {
-      bytes = Array.from(res.value);
-      const hex = bytes.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
-      tlog(`[RX] ${hex} (${bytes.length} bytes)`,'rx');
-    }
-  } catch(e) { tlog('[RX-ERR] '+e.message,'warn'); }
-  finally { try { r.releaseLock(); } catch(e) {} }
-
-  // Validasi: ECU Honda reply = frame dengan byte pertama 0x02 (source addr ECU)
-  // atau data yang tidak sama dengan yang kita kirim
-  const sentSet = new Set([0xBF,0xFE,0x04,0xFF,0x72,0x05,0x00,0xF0,0x99,0xF0,0x00]);
-  const hasEcuByte = bytes.some(b => !sentSet.has(b) && b > 0x01);
-  const hasFrame   = bytes.some((b,i) => b===0x02 && i+1<bytes.length);
-  const longEnough = bytes.length >= 3;
-  const ok = hasFrame || hasEcuByte || longEnough;
+  while(Date.now() < deadline && bytes.length < 32){
+    const r = port.readable.getReader();
+    try {
+      const left = Math.max(50, deadline - Date.now());
+      const res  = await Promise.race([
+        r.read(),
+        delay(Math.min(left, 400)).then(()=>({value:null,done:false}))
+      ]);
+      if(res && res.value && res.value.length > 0){
+        const chunk = Array.from(res.value);
+        bytes.push(...chunk);
+        const hex = chunk.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+        tlog(`[RX] ${hex} (+${chunk.length} bytes, total:${bytes.length})`,'rx');
+        if(bytes.length >= 3) { r.releaseLock(); break; }
+      }
+      r.releaseLock();
+      if(!res || (!res.value && bytes.length === 0 && (deadline-Date.now())<100)) break;
+    } catch(e){ tlog('[RX-ERR] '+e.message,'warn'); try{r.releaseLock();}catch(e2){} break; }
+  }
+  // Validasi: terima APAPUN yang bukan pure echo dari bytes yang kita kirim
+  const echoSet = new Set([0x00,0xBF,0xFE,0x04,0xFF,0x72,0x05,0xF0,0x99,0xB0,0x01,0x18,0x3A,0x8E]);
+  const hasNew   = bytes.some(b => !echoSet.has(b));
+  const hasFrame = bytes.some(b => b===0x02 || b===0x03 || b===0xE0);
+  const ok = hasFrame || hasNew || bytes.length >= 3;
   return { ok, bytes };
 }
 
@@ -1032,6 +1147,79 @@ async function forceConnect(baudRate) {
   }
 }
 
+
+// ══ BRIDGE CONNECT v5 — tombol manual Zeus MST-100P ══
+async function bridgeConnect(profileName) {
+  const prof = ECU_PROFILES[profileName];
+  if(!prof){ tlog('[ERR] Profile tidak dikenal: '+profileName,'err'); return; }
+
+  const bs = el('bridge-status');
+  if(bs){ bs.style.display='block'; bs.style.color='var(--ylw)'; bs.innerHTML='⏳ Menghubungkan dengan profile '+profileName+'...'; }
+  tlog(`[BRIDGE] ══ ${prof.name} ══`,'warn');
+  tlog(`[BRIDGE] Baud:${prof.baud} LOW:${prof.lowMs}ms HIGH:${prof.highMs}ms WAKE:${prof.wakeDelay}ms`,'info');
+
+  // Pastikan port sudah dipilih
+  let port = S.port;
+  if(!port){
+    if(!('serial' in navigator)){ el('serial-warn').style.display='block'; return; }
+    try {
+      port = await navigator.serial.requestPort();
+      S.port = port;
+      const info = port.getInfo();
+      tlog(`[PORT] VID:${(info.usbVendorId||0).toString(16).toUpperCase()} PID:${(info.usbProductId||0).toString(16).toUpperCase()}`,'ok');
+      setPipe('p-usb','on','CP2102');
+      el('baud-section').style.display='block';
+    } catch(e){ tlog('[ERR] Port tidak dipilih: '+e.message,'err'); return; }
+  }
+
+  // Tutup port jika masih buka
+  try {
+    if(S.reader){ try{await S.reader.cancel();}catch(e){} S.reader=null; }
+    if(port.readable){ try{port.readable.cancel();}catch(e){} }
+    try{ await port.close(); }catch(e){}
+    await delay(500);
+  } catch(e){}
+
+  try {
+    await port.open({ baudRate:prof.baud, dataBits:8, stopBits:1, parity:'none' });
+    tlog(`[BRIDGE] Port terbuka @ ${prof.baud} baud ✓`,'ok');
+    addBaudRow(prof.baud, `${profileName} @ ${prof.baud}`, 'testing');
+
+    await doSlowInit(port, profileName);
+    const resp = await readEcuResp(port, prof.respTimeout);
+
+    if(resp.ok){
+      addBaudRow(prof.baud, `${profileName} @ ${prof.baud}`, 'ok');
+      tlog(`[BRIDGE] ✓ ECU MERESPONS! ${resp.bytes.length} bytes — SUKSES!`,'ok');
+      if(bs){ bs.style.color='var(--grn)'; bs.innerHTML='✓ BRIDGE OK — ECU merespons dengan profile <b>'+profileName+'</b>'; }
+      S.detectedBaud = prof.baud;
+    } else {
+      addBaudRow(prof.baud, `${profileName} @ ${prof.baud}`, 'fail');
+      tlog('[BRIDGE] Tidak ada respon. Coba profile lain atau cek: IG ON? DLC? 12V?','warn');
+      if(bs){ bs.style.color='var(--ylw)'; bs.innerHTML='⚠ No response dengan '+profileName+' — coba profile lain atau cek fisik'; }
+      S.detectedBaud = prof.baud;
+    }
+
+    S.port = port; S.connected = true; S.demo = false;
+    el('ei-baud').textContent  = prof.baud+' baud ('+profileName+')';
+    el('ei-stat').textContent  = resp.ok ? 'BRIDGE-OK' : 'BRIDGE-NORESP';
+    el('ei-stat').style.color  = resp.ok ? 'var(--grn)' : 'var(--ylw)';
+    el('btn-con').style.display = 'none';
+    el('btn-dis').style.display = 'inline-block';
+    setPipe('p-zeus','on','K-LINE');
+    if(resp.ok){ setPipe('p-ecu','on','ECU OK'); setPipe('p-flash','on','FLASH'); }
+    setTopMode(resp.ok ? 'ONLINE' : 'NO-ECU');
+
+    startRead(); startPolling(); startFps();
+    await delay(500);
+    await initECU();
+
+  } catch(e){
+    tlog('[BRIDGE-ERR] '+e.message,'err');
+    if(bs){ bs.style.color='var(--red)'; bs.innerHTML='✗ Error: '+e.message; }
+  }
+}
+
 // ── MAIN CONNECT ──
 async function doConnect() {
   if (!('serial' in navigator)) { el('serial-warn').style.display='block'; return; }
@@ -1058,14 +1246,16 @@ async function doConnect() {
     S.port = port;
     el('baud-section').style.display = 'block';
 
-    // ── BAUD STRATEGIES ──
-    // Urutan: native baud profile → 38400 (jika berbeda) → 10400 → 115200
+    // ── BAUD STRATEGIES v5 — Zeus MST-100P Full Sweep ──
     const strategies = [];
-    strategies.push({ baud: prof.baud,  label: `${prof.baud} ${profile} native`,  profile });
-    if (prof.baud !== 38400) strategies.push({ baud:38400,  label:'38400 ZEUS passthrough', profile });
-    if (prof.baud !== 10400) strategies.push({ baud:10400,  label:'10400 Honda K-Line',     profile });
-    strategies.push({ baud:115200, label:'115200 high speed',      profile: 'STD' });
-    strategies.push({ baud:57600,  label:'57600 fallback',         profile: 'STD' });
+    strategies.push({ baud:10400, label:'10400 C9 native (250ms)',   profile:'C9_STD'   });
+    strategies.push({ baud:10400, label:'10400 C9 ultra-slow (500ms)',profile:'C9_SLOW'  });
+    strategies.push({ baud:10400, label:'10400 C9 alt-init bytes',   profile:'C9_ALT'   });
+    strategies.push({ baud:38400, label:'38400 Zeus passthrough',    profile:'PASS38'   });
+    strategies.push({ baud:10400, label:'10400 raw bypass',          profile:'RAW'      });
+    strategies.push({ baud:10400, label:'10400 wake-only',           profile:'WAKEONLY' });
+    strategies.push({ baud:115200,label:'115200 high speed',         profile:'STD'      });
+    strategies.push({ baud:57600, label:'57600 fallback',            profile:'STD'      });
 
     let connected = false;
 
