@@ -241,17 +241,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
     <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);letter-spacing:2px">AUTO-DETECT BAUD — SLOW INIT:</div>
     <div style="display:flex;gap:4px">
-      <button class="btn" style="padding:2px 8px;font-size:9px;background:var(--b2);color:var(--acc)" onclick="forceConnect(10400)">FORCE 10400</button>
-      <button class="btn" style="padding:2px 8px;font-size:9px;background:var(--b2);color:var(--ylw)" onclick="forceConnect(38400)">FORCE 38400</button>
+      <button class="btn" style="padding:3px 10px;font-size:9px;background:#0a2a1a;border:1px solid var(--grn);color:var(--grn);border-radius:3px" onclick="forceConnect(10400)">⚡ FORCE 10400 (C9)</button>
+      <button class="btn" style="padding:3px 10px;font-size:9px;background:#1a1a0a;border:1px solid var(--ylw);color:var(--ylw);border-radius:3px" onclick="forceConnect(38400)">⚡ FORCE 38400</button>
     </div>
   </div>
   <div id="baud-rows"></div>
-  <div id="baud-tip" style="display:none;margin-top:8px;padding:8px;background:#1a0a0a;border:1px solid var(--red);border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw)">
-    ⚠ Semua baud no response. Cek:<br>
-    1) Power supply 12V ON di trainer board<br>
-    2) Terminal IG (ignition) sudah dapat +12V<br>
-    3) Kabel DLC — pin K-Line (biru/putih) terhubung<br>
-    4) Coba klik FORCE 10400 di atas
+  <div id="baud-tip" style="display:none;margin-top:8px;padding:10px;background:#1a0505;border:1px solid var(--red);border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw);line-height:1.8">
+    ⚠ SEMUA BAUD NO RESPONSE — ECU K56-N01 C9 SERIES<br>
+    <span style="color:var(--red)">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br>
+    Cek urutan ini:<br>
+    <span style="color:var(--wht)">1)</span> Power supply 12V trainer board ON? (ukur dengan multimeter)<br>
+    <span style="color:var(--wht)">2)</span> Terminal <span style="color:var(--red)">IG (ignition)</span> sudah dapat +12V? ← PALING SERING!<br>
+    <span style="color:var(--wht)">3)</span> Kabel DLC terpasang ke soket trainer dengan klik terkunci?<br>
+    <span style="color:var(--wht)">4)</span> Pin K-Line = DLC1 (kabel biru/putih) terhubung ke ECU?<br>
+    <span style="color:var(--wht)">5)</span> Tunggu 2 detik setelah IG ON, lalu klik FORCE 10400<br>
+    <span style="color:var(--red)">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br>
+    ECU C9 series (SW:0101C90F01) butuh timing khusus:<br>
+    LOW 200ms → HIGH 200ms → PREFIX BF 00 04 04 FE → WAKE → INIT
   </div>
 </div>
 
@@ -281,7 +287,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 <span style="color:var(--acc)">ZEUS MST-100P Chip:</span>   <span style="color:var(--wht)">CP2102 Silicon Labs (VID: 0x10C4)</span><br>
 <span style="color:var(--acc)">Protokol:</span>              <span style="color:var(--wht)">Honda K-Line ISO 9141 (undocumented)</span><br>
 <span style="color:var(--acc)">Baud Rate ECU:</span>         <span style="color:var(--ylw)">10400 baud (non-standard)</span><br>
-<span style="color:var(--acc)">ECU K-Line Baud:</span>        <span style="color:var(--wht)">10400 baud (Honda native)</span><br>
+<span style="color:var(--acc)">ECU K-Line Baud:</span>        <span style="color:var(--wht)">10400 baud (Honda native K-Line)</span><br><span style="color:var(--acc)">SW C9 Prefix  :</span>        <span style="color:var(--ylw)">BF 00 04 04 FE (sebelum WAKE)</span><br><span style="color:var(--acc)">Init Timing C9:</span>        <span style="color:var(--ylw)">LOW 200ms → HIGH 200ms → wakeup</span><br>
 <span style="color:var(--acc)">Init K-Line:</span>           <span style="color:var(--wht)">Pull LOW 70ms → HIGH 120ms → wakeup</span><br>
 <span style="color:var(--acc)">Frame Format:</span>          <span style="color:var(--wht)">[DST][LEN][TYPE][TABLE][ADDR][DATA...][CS]</span><br>
 <span style="color:var(--acc)">Checksum:</span>              <span style="color:var(--ylw)">(0x100 - sum) & 0xFF</span><br>
@@ -819,226 +825,371 @@ function ecuChanged(){
 
 // ── CONNECT ──
 // ── FORCE CONNECT (manual override baud) ──
-async function forceConnect(baudRate){
-  if(!S.port){
-    tlog('[ERR] Belum ada port dipilih. Klik CONNECT dulu, pilih port, baru klik FORCE.','err');
+// ══════════════════════════════════════════════════════════════════════════
+// HONDA KEIHIN K-LINE — UNIVERSAL CONNECT v3
+// Support: K56-N01 (Sonic150/Vario150), K45 (Vario125), K93 (Beat), MKJ (CBR150)
+// SW C9 series: timing berbeda — LOW 200ms, HIGH 200ms, prefix BF packet
+// Ref: AutotronicCommunity/Honda_Keihin_KLine + OpenECU + reverse engineering
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── ECU PROFILE: timing & init bytes per model/SW series ──
+const ECU_PROFILES = {
+  // SW C9 series: Sonic 150, CBR 150R, Vario 150 gen2 (K56-N01 A3xx)
+  'C9': {
+    name:      'Keihin C9 Series (Sonic150/CBR150/Vario150 gen2)',
+    baud:      10400,
+    lowMs:     200,   // pull K-Line LOW duration ms
+    highMs:    200,   // K-Line HIGH idle ms
+    wakeDelay: 300,   // delay after WAKE ms
+    initDelay: 600,   // delay after INIT ms
+    prefix:    [0xBF,0x00,0x04,0x04,0xFE],  // prefix sebelum WAKE untuk C9
+    wake:      [0xFE,0x04,0xFF,0xFF],
+    init:      [0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout: 1200,
+  },
+  // Standard K-Line: Vario125 (K45), Beat (K93), PCX, dll
+  'STD': {
+    name:      'Keihin Standard K-Line (Vario125/Beat/PCX)',
+    baud:      10400,
+    lowMs:     70,
+    highMs:    120,
+    wakeDelay: 60,
+    initDelay: 400,
+    prefix:    [],
+    wake:      [0xFE,0x04,0xFF,0xFF],
+    init:      [0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout: 900,
+  },
+  // CBR250 / PCX160 / newer models — high speed K-Line
+  'HSP': {
+    name:      'Keihin High Speed (CBR250/PCX160)',
+    baud:      38400,
+    lowMs:     25,
+    highMs:    60,
+    wakeDelay: 50,
+    initDelay: 300,
+    prefix:    [],
+    wake:      [0xFE,0x04,0xFF,0xFF],
+    init:      [0x72,0x05,0x00,0xF0,0x99,0xF0],
+    respTimeout: 700,
+  },
+};
+
+// Deteksi profile dari SW version string
+function detectProfile(swVer) {
+  if (!swVer) return 'C9'; // default untuk K56-N01 yang kita miliki
+  const upper = swVer.toUpperCase();
+  if (upper.includes('C9'))  return 'C9';
+  if (upper.includes('CBR250') || upper.includes('PCX160') || upper.includes('KYJ')) return 'HSP';
+  return 'STD';
+}
+
+// ── SLOW INIT via CP2102 ──
+async function doSlowInit(port, profile) {
+  const prof = ECU_PROFILES[profile] || ECU_PROFILES['C9'];
+  tlog(`[SLOW-INIT] Profile: ${prof.name}`,'info');
+  tlog(`[SLOW-INIT] Pull K-Line LOW ${prof.lowMs}ms...`,'info');
+
+  // Step 1: K-Line LOW — kirim 0x00 bytes selama lowMs
+  // Pada baud 10400: 1 byte = ~0.96ms → nLow = lowMs / 0.96
+  const nLow = Math.max(1, Math.ceil(prof.baud * (prof.lowMs/1000) / 10));
+  const wLow = port.writable.getWriter();
+  await wLow.write(new Uint8Array(nLow).fill(0x00));
+  wLow.releaseLock();
+  await delay(prof.lowMs);
+
+  // Step 2: K-Line HIGH — idle (tidak kirim apapun)
+  tlog(`[SLOW-INIT] K-Line HIGH ${prof.highMs}ms (idle)...`,'info');
+  await delay(prof.highMs);
+  await delay(30); // stabilisasi
+
+  // Step 3: Flush RX buffer
+  await flushRx(port, 100);
+
+  // Step 4: Prefix packet (khusus C9 series)
+  if (prof.prefix && prof.prefix.length > 0) {
+    const wPfx = port.writable.getWriter();
+    await wPfx.write(new Uint8Array(prof.prefix));
+    const pfxHex = prof.prefix.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+    tlog(`[TX] PREFIX: ${pfxHex}`,'tx');
+    wPfx.releaseLock();
+    await delay(prof.wakeDelay);
+    await flushRx(port, 80);
+  }
+
+  // Step 5: WAKE packet
+  const wWake = port.writable.getWriter();
+  await wWake.write(new Uint8Array(prof.wake));
+  const wakeHex = prof.wake.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+  tlog(`[TX] WAKE: ${wakeHex}`,'tx');
+  wWake.releaseLock();
+  await delay(prof.wakeDelay);
+
+  // Step 6: INIT packet
+  const wInit = port.writable.getWriter();
+  await wInit.write(new Uint8Array(prof.init));
+  const initHex = prof.init.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+  tlog(`[TX] INIT: ${initHex}`,'tx');
+  wInit.releaseLock();
+  await delay(prof.initDelay);
+}
+
+// Flush/drain RX buffer
+async function flushRx(port, timeoutMs) {
+  if (!port.readable) return;
+  const r = port.readable.getReader();
+  try {
+    await Promise.race([r.read(), delay(timeoutMs).then(()=>null)]);
+  } catch(e) {}
+  finally { try { r.releaseLock(); } catch(e) {} }
+}
+
+// Baca respon ECU dan cek valid
+async function readEcuResp(port, timeoutMs) {
+  if (!port.readable) return { ok: false, bytes: [] };
+  const r = port.readable.getReader();
+  let bytes = [];
+  try {
+    const res = await Promise.race([
+      r.read(),
+      delay(timeoutMs).then(()=>({ value: null }))
+    ]);
+    if (res && res.value && res.value.length > 0) {
+      bytes = Array.from(res.value);
+      const hex = bytes.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+      tlog(`[RX] ${hex} (${bytes.length} bytes)`,'rx');
+    }
+  } catch(e) { tlog('[RX-ERR] '+e.message,'warn'); }
+  finally { try { r.releaseLock(); } catch(e) {} }
+
+  // Validasi: ECU Honda reply = frame dengan byte pertama 0x02 (source addr ECU)
+  // atau data yang tidak sama dengan yang kita kirim
+  const sentSet = new Set([0xBF,0xFE,0x04,0xFF,0x72,0x05,0x00,0xF0,0x99,0xF0,0x00]);
+  const hasEcuByte = bytes.some(b => !sentSet.has(b) && b > 0x01);
+  const hasFrame   = bytes.some((b,i) => b===0x02 && i+1<bytes.length);
+  const longEnough = bytes.length >= 3;
+  const ok = hasFrame || hasEcuByte || longEnough;
+  return { ok, bytes };
+}
+
+// ── FORCE CONNECT (tombol manual override) ──
+async function forceConnect(baudRate) {
+  const profile = detectProfile('C9'); // force pakai C9 timing untuk K56-N01
+  const prof = ECU_PROFILES[profile];
+  tlog(`[FORCE] Connect paksa ${baudRate} baud — profile ${profile}...`,'warn');
+
+  let port = S.port;
+  if (!port) {
+    tlog('[ERR] Belum ada port. Klik CONNECT, pilih port CP210x, baru klik FORCE.','err');
     return;
   }
-  tlog(`[FORCE] Memaksa connect di ${baudRate} baud tanpa baud sweep...`,'warn');
-  try{
-    if(port && port.readable){
-      try{ port.readable.cancel(); await S.port.close(); }catch(e){}
+
+  // Tutup port jika masih terbuka
+  try {
+    if (port.readable) { try { port.readable.cancel(); } catch(e) {} }
+    try { await port.close(); } catch(e) {}
+    await delay(300);
+  } catch(e) {}
+
+  try {
+    await port.open({ baudRate: baudRate, dataBits:8, stopBits:1, parity:'none' });
+    tlog(`[FORCE] Port terbuka di ${baudRate} baud`,'ok');
+
+    // Slow init dengan profile C9
+    await doSlowInit(port, profile);
+
+    // Baca respon
+    const resp = await readEcuResp(port, prof.respTimeout);
+
+    if (resp.ok) {
+      tlog(`[FORCE] ✓ ECU MERESPONS! ${resp.bytes.length} bytes`,'ok');
+      S.detectedBaud = baudRate;
+      addBaudRow(baudRate, `FORCE ${baudRate} — C9 timing`, 'ok');
+    } else {
+      tlog('[FORCE] Tidak ada respon dari ECU. Cek: 1) Power 12V  2) IG +12V  3) Kabel DLC','warn');
+      tlog('[FORCE] Melanjutkan dengan force mode — coba read data...','warn');
+      S.detectedBaud = baudRate;
     }
-    const port = S.port;
-    await port.open({baudRate:baudRate,dataBits:8,stopBits:1,parity:'none'});
 
-    // Slow init
-    tlog('[FORCE-INIT] Pull K-Line LOW 70ms...','info');
-    const wf=port.writable.getWriter();
-    const nLow=Math.ceil(baudRate*0.070/10);
-    await wf.write(new Uint8Array(nLow).fill(0x00));
-    wf.releaseLock();
-    await delay(70);
-    await delay(120); // HIGH
-    await delay(50);
-
-    const w2=port.writable.getWriter();
-    await w2.write(new Uint8Array([0xFE,0x04,0xFF,0xFF]));
-    tlog('[TX] WAKE: FE 04 FF FF','tx');
-    await delay(60);
-    await w2.write(new Uint8Array([0x72,0x05,0x00,0xF0,0x99,0xF0]));
-    tlog('[TX] INIT: 72 05 00 F0 99 F0','tx');
-    w2.releaseLock();
-    await delay(400);
-
-    S.detectedBaud = baudRate;
+    S.port = port;
     S.connected = true; S.demo = false;
-    el('ei-baud').textContent = baudRate+' baud (forced)';
-    el('ei-stat').textContent = 'FORCE CONNECT';
-    el('ei-stat').style.color = 'var(--ylw)';
+    el('ei-baud').textContent = baudRate + ' baud (C9-forced)';
+    el('ei-stat').textContent  = resp.ok ? 'FORCE OK' : 'FORCE NO-RESP';
+    el('ei-stat').style.color  = resp.ok ? 'var(--grn)' : 'var(--ylw)';
     el('btn-con').style.display = 'none';
     el('btn-dis').style.display = 'inline-block';
     setPipe('p-zeus','on','K-LINE');
-    tlog(`[FORCE] ✓ Port terbuka di ${baudRate} baud — memulai read...`,'ok');
+    if (resp.ok) setPipe('p-ecu','on','ECU OK');
 
     startRead();
     startPolling();
     startFps();
-    setTimeout(()=>{ setPipe('p-ecu','on','ECU OK'); },1000);
-  }catch(e){
-    tlog('[FORCE-ERR] '+e.message,'err');
+    await delay(500);
+    await initECU();
+
+  } catch(e) {
+    tlog('[FORCE-ERR] ' + e.message,'err');
   }
 }
 
-// ══════════════════════════════════════════════════════════════════
-// HONDA KEIHIN K-LINE CONNECT — SUPPORT BAUD 10400 + SLOW INIT
-// Ref: AutotronicCommunity/Honda_Keihin_KLine_Protocol + gonzos.net
-// ECU K56-N01 (Sonic150), K45 (Vario125), K93 (Beat), MKJ (CBR150)
-// ══════════════════════════════════════════════════════════════════
+// ── MAIN CONNECT ──
+async function doConnect() {
+  if (!('serial' in navigator)) { el('serial-warn').style.display='block'; return; }
 
-async function doConnect(){
-  if(!('serial' in navigator)){el('serial-warn').style.display='block';return;}
-  tlog('[CONNECT] Memulai koneksi Honda Keihin K-Line...','info');
-  tlog('[INFO] ECU Honda butuh 10400 baud + Slow Init (pull LOW 70ms)','info');
-  try{
+  // Deteksi profile dari ECU model yang dipilih
+  const ecuModel = el('ecu-model').value;
+  // K56 = Sonic150/Vario150 → pakai C9 profile
+  // K45, K93 = Vario125/Beat → STD
+  // KYJ = CBR250 → HSP
+  const profileMap = { k56:'C9', k45:'STD', k93:'STD', mkj:'C9', kyj:'HSP', k0j:'STD' };
+  const profile = profileMap[ecuModel] || 'C9';
+  const prof = ECU_PROFILES[profile];
+
+  tlog(`[CONNECT] ECU: ${ecuModel.toUpperCase()} → Profile: ${profile} (${prof.name})`,'info');
+  tlog(`[CONNECT] Timing: LOW=${prof.lowMs}ms HIGH=${prof.highMs}ms BAUD=${prof.baud}`,'info');
+
+  try {
     const port = await navigator.serial.requestPort();
     const info  = port.getInfo();
-    const isCP  = (info.usbVendorId===0x10C4);
-    el('ei-vid').textContent=`VID:${(info.usbVendorId||0).toString(16).toUpperCase()} PID:${(info.usbProductId||0).toString(16).toUpperCase()}`;
-    tlog(`[PORT] ${isCP?'✓ CP2102 Silicon Labs (VID:10C4)':'chip VID:0x'+(info.usbVendorId||0).toString(16)} terdeteksi`,'ok');
+    const isCP  = (info.usbVendorId === 0x10C4);
+    el('ei-vid').textContent = `VID:${(info.usbVendorId||0).toString(16).toUpperCase()} PID:${(info.usbProductId||0).toString(16).toUpperCase()}`;
+    tlog(`[PORT] ${isCP ? '✓ CP2102 Silicon Labs (VID:10C4)' : 'VID:0x'+(info.usbVendorId||0).toString(16)} terdeteksi`,'ok');
     setPipe('p-usb','on','CP2102');
-    el('baud-section').style.display='block';
+    S.port = port;
+    el('baud-section').style.display = 'block';
 
-    // Strategi koneksi: Honda native 10400 dulu, lalu fallback
-    const strategies=[
-      {baud:10400, label:'10400 Honda native K-Line', slowInit:true },
-      {baud:38400, label:'38400 ZEUS passthrough',     slowInit:true },
-      {baud:115200,label:'115200 high speed',          slowInit:false},
-      {baud:57600, label:'57600 fallback',             slowInit:false},
-    ];
+    // ── BAUD STRATEGIES ──
+    // Urutan: native baud profile → 38400 (jika berbeda) → 10400 → 115200
+    const strategies = [];
+    strategies.push({ baud: prof.baud,  label: `${prof.baud} ${profile} native`,  profile });
+    if (prof.baud !== 38400) strategies.push({ baud:38400,  label:'38400 ZEUS passthrough', profile });
+    if (prof.baud !== 10400) strategies.push({ baud:10400,  label:'10400 Honda K-Line',     profile });
+    strategies.push({ baud:115200, label:'115200 high speed',      profile: 'STD' });
+    strategies.push({ baud:57600,  label:'57600 fallback',         profile: 'STD' });
 
-    let connected=false;
-    for(const strat of strategies){
-      addBaudRow(strat.baud, strat.label,'testing');
-      try{
-        await port.open({baudRate:strat.baud,dataBits:8,stopBits:1,parity:'none'});
-        tlog(`[BAUD] Testing ${strat.baud}...`,'info');
+    let connected = false;
 
-        if(strat.slowInit){
-          // ── HONDA SLOW INIT SEQUENCE ──
-          // K-Line pull LOW 70ms: kirim 0x00 bytes (line = marking low)
-          tlog('[SLOW-INIT] Pull K-Line LOW 70ms...','info');
-          const w0=port.writable.getWriter();
-          // Jumlah byte LOW sesuai baud: 10400baud→73bytes, 38400baud→270bytes
-          const nLow = Math.ceil(strat.baud * 0.070 / 10);
-          await w0.write(new Uint8Array(nLow).fill(0x00));
-          w0.releaseLock();
-          await delay(70);
-          // K-Line HIGH 120ms — line idle (tidak kirim apapun)
-          tlog('[SLOW-INIT] K-Line HIGH 120ms...','info');
-          await delay(120);
-          await delay(30); // stabilisasi
+    for (const strat of strategies) {
+      addBaudRow(strat.baud, strat.label, 'testing');
+      try {
+        await port.open({ baudRate: strat.baud, dataBits:8, stopBits:1, parity:'none' });
+        tlog(`[BAUD] Testing ${strat.baud} baud (${strat.profile} timing)...`,'info');
+
+        // Slow init dengan profile timing yang sesuai
+        await doSlowInit(port, strat.profile);
+
+        // Baca respon ECU
+        const stProf = ECU_PROFILES[strat.profile];
+        const resp = await readEcuResp(port, stProf.respTimeout);
+
+        if (resp.ok) {
+          addBaudRow(strat.baud, strat.label, 'ok');
+          tlog(`[✓] BAUD ${strat.baud} — ECU MERESPONS! Profile: ${strat.profile}`,'ok');
+          S.detectedBaud = strat.baud;
+          connected = true;
+          break;
         }
 
-        // Kirim WAKE: FE 04 FF FF
-        const w1=port.writable.getWriter();
-        await w1.write(new Uint8Array([0xFE,0x04,0xFF,0xFF]));
-        tlog('[TX] WAKE: FE 04 FF FF','tx');
-        await delay(60);
-
-        // Kirim INIT: 72 05 00 F0 99 F0
-        await w1.write(new Uint8Array([0x72,0x05,0x00,0xF0,0x99,0xF0]));
-        tlog('[TX] INIT: 72 05 00 F0 99 F0','tx');
-        w1.releaseLock();
-        await delay(400);
-
-        // Baca respon ECU (expected: 02 04 00 FA)
-        const r1=port.readable.getReader();
-        let gotResp=false;
-        try{
-          const res=await Promise.race([
-            r1.read(),
-            delay(900).then(()=>({value:null}))
-          ]);
-          if(res.value && res.value.length>0){
-            const bytes=Array.from(res.value);
-            const hexStr=bytes.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
-            tlog(`[RX] ${hexStr}`,'rx');
-            // Valid ECU response: frame yang mengandung 0x02 (source ECU) atau data baru
-            const sentSet=new Set([0xFE,0x04,0xFF,0x72,0x05,0x00,0xF0,0x99]);
-            const hasNew=bytes.some(b=>!sentSet.has(b)&&b>0x00);
-            const hasFrame=bytes.some((b,i)=>b===0x02 && i+1<bytes.length);
-            gotResp = hasFrame || hasNew || bytes.length>=3;
-            if(gotResp) tlog(`[RX] ECU response valid! ${bytes.length} bytes`,'ok');
+        // Retry sekali dengan C9 timing jika baud == 10400
+        if (!resp.ok && strat.baud === 10400 && strat.profile !== 'C9') {
+          tlog('[RETRY] 10400 — coba dengan C9 timing...','warn');
+          await flushRx(port, 200);
+          await doSlowInit(port, 'C9');
+          const resp2 = await readEcuResp(port, 1200);
+          if (resp2.ok) {
+            addBaudRow(strat.baud, strat.label+' (C9 retry)', 'ok');
+            tlog(`[✓] 10400 C9 retry — ECU MERESPONS!`,'ok');
+            S.detectedBaud = strat.baud;
+            connected = true;
+            break;
           }
-        }catch(re){tlog('[RX] Read error: '+re.message,'warn');}
-        finally{try{r1.releaseLock();}catch(e){}}
-
-        // Retry sekali jika 10400 baud belum dapat respon
-        if(!gotResp && strat.baud===10400){
-          tlog('[RETRY] 10400 — kirim keepalive & retry...','warn');
-          const rw2=port.writable.getWriter();
-          await rw2.write(new Uint8Array([0x72,0x05,0x71,0x00,0x18,0xF7]));
-          rw2.releaseLock();
-          await delay(300);
-          const rr2=port.readable.getReader();
-          try{
-            const r2=await Promise.race([rr2.read(),delay(600).then(()=>({value:null}))]);
-            if(r2.value && r2.value.length>0){
-              const h2=Array.from(r2.value).map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
-              tlog(`[RX2] ${h2}`,'rx');
-              gotResp=true;
-            }
-          }catch(e){}
-          finally{try{rr2.releaseLock();}catch(e){}}
         }
 
-        if(gotResp){
-          addBaudRow(strat.baud,strat.label,'ok');
-          tlog(`[✓] BAUD ${strat.baud} — ECU MERESPONS!`,'ok');
-          S.detectedBaud=strat.baud;
-          S.port=port; connected=true; break;
-        }else{
-          addBaudRow(strat.baud,strat.label,'fail');
-          tlog(`[✗] BAUD ${strat.baud} — no response`,'warn');
-          try{await port.close();}catch(e){}
-        }
-      }catch(e){
-        addBaudRow(strat.baud,strat.label,'fail');
+        addBaudRow(strat.baud, strat.label, 'fail');
+        tlog(`[✗] ${strat.baud} — no response`,'warn');
+        try { await port.close(); } catch(e) {}
+
+      } catch(e) {
+        addBaudRow(strat.baud, strat.label, 'fail');
         tlog(`[ERR] ${strat.baud}: ${e.message}`,'err');
-        try{await port.close();}catch(e2){}
+        try { await port.close(); } catch(e2) {}
       }
+    } // end baud loop
+
+    // Jika semua gagal → force connect di baud native
+    if (!connected) {
+      tlog('','info');
+      tlog('[!!] ═══ SEMUA BAUD NO RESPONSE ═══','err');
+      tlog('[!!] Kemungkinan penyebab:','warn');
+      tlog('[!!] 1. Power supply 12V trainer board BELUM ON','warn');
+      tlog('[!!] 2. Terminal IG (ignition) BELUM dapat +12V — PALING SERING!','warn');
+      tlog('[!!] 3. Kabel DLC — pin K-Line (biru/putih) tidak terhubung ke soket','warn');
+      tlog('[!!] 4. ECU butuh power ON minimal 500ms sebelum init K-Line','warn');
+      tlog('[!!] → Klik FORCE 10400 setelah cek semua poin di atas','warn');
+      tlog('','info');
+      const tip = el('baud-tip'); if(tip) tip.style.display='block';
+      // Tetap set port untuk FORCE connect
+      try {
+        await port.open({ baudRate: prof.baud, dataBits:8, stopBits:1, parity:'none' });
+      } catch(e) {
+        try { await port.open({ baudRate:38400, dataBits:8, stopBits:1, parity:'none' }); } catch(e2) {}
+      }
+      S.detectedBaud = prof.baud;
     }
 
-    // Force connect jika semua gagal
-    if(!connected){
-      tlog('[WARN] Semua baud no response — force connect 10400...','warn');
-      tlog('[TIP] Cek: 1) Power 12V ON  2) Terminal IG +12V  3) DLC pin K-Line (biru/putih)','warn');
-      const tip=el('baud-tip'); if(tip) tip.style.display='block';
-      S.detectedBaud=10400;
-      try{
-        if(!port.readable) await port.open({baudRate:10400,dataBits:8,stopBits:1,parity:'none'});
-      }catch(e){
-        try{await port.open({baudRate:38400,dataBits:8,stopBits:1,parity:'none'});S.detectedBaud=38400;}catch(e2){}
-      }
-      S.port=port;
-    }
-
-    S.connected=true; S.demo=false;
-    el('ei-baud').textContent=S.detectedBaud+' baud';
-    el('ei-stat').textContent=connected?'ONLINE':'PARTIAL';
-    el('ei-stat').style.color=connected?'var(--grn)':'var(--ylw)';
-    el('btn-con').style.display='none';
-    el('btn-dis').style.display='inline-block';
+    S.connected = true; S.demo = false;
+    el('ei-baud').textContent  = S.detectedBaud + ' baud';
+    el('ei-stat').textContent  = connected ? 'ONLINE' : 'NO ECU RESP';
+    el('ei-stat').style.color  = connected ? 'var(--grn)' : 'var(--ylw)';
+    el('btn-con').style.display = 'none';
+    el('btn-dis').style.display = 'inline-block';
     setPipe('p-zeus','on','K-LINE');
-    setTopMode(connected?'ONLINE':'NO ECU RESP');
+    setTopMode(connected ? 'ONLINE' : 'NO ECU RESP');
 
     await initECU();
     startRead();
     startPolling();
     startFps();
 
-  }catch(e){
+  } catch(e) {
     tlog('[ERR] '+e.message,'err');
     tlog('[TIP] Pastikan driver CP2102 terinstall → Device Manager → Ports (COM&LPT)','warn');
   }
 }
 
-async function initECU(){
-  tlog('[INIT] Honda Keihin full init sequence...','info');
-  await delay(100);
+// ── INIT ECU (post-connect) ──
+async function initECU() {
+  const ecuModel = el('ecu-model').value;
+  const profileMap = { k56:'C9', k45:'STD', k93:'STD', mkj:'C9', kyj:'HSP', k0j:'STD' };
+  const profile = profileMap[ecuModel] || 'C9';
+  const prof = ECU_PROFILES[profile];
+
+  tlog('[INIT] Keihin full init — profile '+profile+'...','info');
+  await delay(150);
+
+  // Prefix (C9 series)
+  if (prof.prefix && prof.prefix.length > 0) {
+    await writeB(prof.prefix);
+    await delay(prof.wakeDelay);
+  }
   // WAKE
-  await writeB([0xFE,0x04,0xFF,0xFF]);
-  await delay(200);
+  await writeB(prof.wake);
+  await delay(prof.wakeDelay);
   // INIT
-  await writeB([0x72,0x05,0x00,0xF0,0x99,0xF0]);
-  await delay(500);
-  // Tabel 00 untuk verifikasi
+  await writeB(prof.init);
+  await delay(prof.initDelay);
+  // Tabel 00 verifikasi
   await writeB(CMD.T00);
   await delay(300);
+
   setPipe('p-ecu','on','ECU OK');
-  tlog('[INIT] ✓ Init selesai — memulai polling data sensor...','ok');
-  setInterval(()=>{if(S.connected&&!S.demo)writeB(CMD.KA);},2000);
+  setPipe('p-flash','on','FLASH');
+  tlog('[INIT] ✓ Init selesai — polling data sensor aktif','ok');
+
+  // Keepalive setiap 1.8 detik
+  setInterval(()=>{
+    if(S.connected && !S.demo) writeB(CMD.KA);
+  }, 1800);
 }
 
 function startPolling(){
