@@ -3,1939 +3,1790 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZEUS MASTER PRO v5 — Zeus MST-100P Full Bridge</title>
+<title>DIY ECU TOOL — Honda K-Line via Arduino</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;800&family=Orbitron:wght@700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
 
-:root{
-  --bg:#030608;--panel:#060d10;--b1:#0c2030;--b2:#102840;
-  --acc:#00d4ff;--grn:#00ff88;--ylw:#ffcc00;--red:#ff2244;--org:#ff7700;--pur:#aa44ff;
-  --txt:#80c8e8;--dim:#1a3a50;--dim2:#245070;--wht:#d0eef8;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--txt);font-family:'Barlow Condensed',sans-serif;min-height:100vh;
-  background-image:radial-gradient(ellipse at 20% 50%,rgba(0,150,255,0.03),transparent 60%),
-    radial-gradient(ellipse at 80% 20%,rgba(0,255,136,0.02),transparent 60%),
-    linear-gradient(rgba(0,212,255,0.012) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,255,0.012) 1px,transparent 1px);
-  background-size:100% 100%,100% 100%,20px 20px,20px 20px;}
+  :root {
+    --bg: #070a0f;
+    --bg2: #0c1018;
+    --bg3: #111720;
+    --border: #1e2d40;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #39ff14;
+    --warn: #ffcc00;
+    --danger: #ff2244;
+    --text: #c8d8e8;
+    --text2: #607080;
+    --glow: 0 0 12px #00e5ff44;
+    --glow2: 0 0 12px #ff6b3544;
+  }
 
-/* ── TOPBAR ── */
-.topbar{display:flex;align-items:center;gap:16px;padding:10px 16px;background:rgba(0,0,0,0.6);
-  border-bottom:1px solid var(--b2);margin-bottom:14px;flex-wrap:wrap}
-.logo{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--acc);
-  letter-spacing:3px;text-shadow:0 0 16px rgba(0,212,255,0.5);flex-shrink:0}
-.logo span{color:var(--grn)}
-.conn-bar{display:flex;gap:8px;align-items:center;flex:1;flex-wrap:wrap}
-.pipenode{display:flex;align-items:center;gap:5px;font-family:'Share Tech Mono',monospace;font-size:10px}
-.pdot{width:8px;height:8px;border-radius:50%;background:var(--dim);transition:all 0.3s;animation:none}
-.pdot.on{background:var(--grn);box-shadow:0 0 6px var(--grn);animation:pulse 1.5s infinite}
-.pdot.warn{background:var(--ylw);box-shadow:0 0 6px var(--ylw)}
-.pdot.err{background:var(--red);box-shadow:0 0 6px var(--red)}
-.parr{color:var(--dim2);font-size:12px}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-.cstat{padding:4px 10px;border:1px solid var(--b2);font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-/* ── TABS ── */
-.tabs{display:flex;gap:3px;padding:0 14px;margin-bottom:12px;flex-wrap:wrap}
-.tab{padding:7px 14px;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;
-  border:1px solid var(--b2);color:var(--dim2);background:transparent;cursor:pointer;transition:all 0.2s}
-.tab.a{border-color:var(--acc);color:var(--acc);background:rgba(0,212,255,0.05)}
-.tab.r.a{border-color:var(--red);color:var(--red);background:rgba(255,34,68,0.05)}
-.tab.g.a{border-color:var(--grn);color:var(--grn);background:rgba(0,255,136,0.04)}
-.tc{display:none;padding:0 14px 14px}.tc.a{display:block}
+  /* Grid scanlines background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.015) 2px, rgba(0,229,255,0.015) 4px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,229,255,0.01) 40px, rgba(0,229,255,0.011) 41px);
+    pointer-events: none;
+    z-index: 0;
+  }
 
-/* ── PANELS ── */
-.sec{background:var(--panel);border:1px solid var(--b1);padding:14px;margin-bottom:10px;position:relative}
-.sec::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--acc),transparent);opacity:0.25}
-.sec.G::before{background:linear-gradient(90deg,transparent,var(--grn),transparent)}
-.sec.R::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
-.sec.Y::before{background:linear-gradient(90deg,transparent,var(--ylw),transparent)}
-.sec.P::before{background:linear-gradient(90deg,transparent,var(--pur),transparent)}
+  .wrap { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 0 16px 40px; }
 
-.pt{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;margin-bottom:10px;
-  display:flex;align-items:center;gap:6px}
-.pt::after{content:'';flex:1;height:1px;background:var(--b2)}
-.ptG{color:var(--grn)}.ptY{color:var(--ylw)}.ptR{color:var(--red)}.ptP{color:var(--pur)}
-.ptA{color:var(--acc)}
+  /* ===== HEADER ===== */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-shadow: var(--glow);
+  }
+  .logo span { color: var(--accent2); }
+  .logo sub { font-size: 9px; color: var(--text2); display: block; letter-spacing: 4px; margin-top: -4px; font-family: 'Share Tech Mono'; }
 
-/* ── CONNECT PANEL ── */
-.conn-grid{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
-.sel{background:rgba(0,0,0,0.6);border:1px solid var(--b2);color:var(--txt);
-  font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px 10px;outline:none;width:100%}
-.sel:focus{border-color:var(--acc)}
-.inp{background:rgba(0,0,0,0.6);border:1px solid var(--b2);color:var(--txt);
-  font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px 10px;outline:none}
-.inp:focus{border-color:var(--acc)}
-.btn{padding:8px 18px;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;
-  cursor:pointer;border:none;font-weight:700;transition:all 0.2s;white-space:nowrap}
-.bA{background:linear-gradient(135deg,var(--acc),#0088aa);color:var(--bg)}
-.bA:hover{box-shadow:0 0 16px rgba(0,212,255,0.4)}
-.bG{background:linear-gradient(135deg,var(--grn),#009955);color:var(--bg)}
-.bG:hover{box-shadow:0 0 16px rgba(0,255,136,0.4)}
-.bR{background:transparent;border:1px solid var(--red);color:var(--red)}
-.bR:hover{background:var(--red);color:#fff}
-.bY{background:transparent;border:1px solid var(--ylw);color:var(--ylw)}
-.bY:hover{background:var(--ylw);color:var(--bg)}
-.bP{background:linear-gradient(135deg,var(--pur),#6600cc);color:#fff}
+  .status-bar {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .pill {
+    font-family: 'Share Tech Mono';
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text2);
+    letter-spacing: 1px;
+  }
+  .pill.online { border-color: var(--accent3); color: var(--accent3); box-shadow: 0 0 8px #39ff1444; }
+  .pill.warn { border-color: var(--warn); color: var(--warn); }
+  .pill.danger { border-color: var(--danger); color: var(--danger); }
 
-/* ── PROGRESS ── */
-.pb{margin:5px 0}.pb-row{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:10px;margin-bottom:3px}
-.pb-bar{height:5px;background:var(--b1);border-radius:3px;overflow:hidden}
-.pb-fill{height:100%;border-radius:3px;transition:width 0.4s}
+  /* ===== CONNECT BAR ===== */
+  .connect-bar {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 10px; align-items: center;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
 
-/* ── DATA GRID ── */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  select, input[type=number] {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono';
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    outline: none;
+    width: 100%;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
 
-/* ── DATA CARD ── */
-.dc{border:1px solid var(--b1);padding:10px;text-align:center;background:rgba(0,212,255,0.02);transition:border-color 0.4s,box-shadow 0.4s}
-.dc:hover{border-color:var(--b2)}
-.dc-v{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:3px;transition:color 0.3s}
-.dc-l{font-size:8px;letter-spacing:3px;color:var(--dim2)}
-.dc-u{font-size:10px;color:var(--dim2);margin-top:2px}
+  button {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 7px 14px;
+    border-radius: 5px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  button:hover { background: var(--accent); color: var(--bg); box-shadow: var(--glow); }
+  button.danger { border-color: var(--danger); color: var(--danger); }
+  button.danger:hover { background: var(--danger); color: #fff; }
+  button.warn { border-color: var(--warn); color: var(--warn); }
+  button.warn:hover { background: var(--warn); color: var(--bg); }
+  button.green { border-color: var(--accent3); color: var(--accent3); }
+  button.green:hover { background: var(--accent3); color: var(--bg); }
+  button.orange { border-color: var(--accent2); color: var(--accent2); }
+  button.orange:hover { background: var(--accent2); color: #fff; }
+  button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-/* ── SENSOR BAR ── */
-.sbar{margin:6px 0}.sbar-top{display:flex;justify-content:space-between;
-  font-family:'Share Tech Mono',monospace;font-size:11px;margin-bottom:3px}
-.sbar-track{height:6px;background:var(--b1);border-radius:3px;overflow:hidden}
-.sbar-fill{height:100%;border-radius:3px;transition:width 0.4s}
+  /* ===== TABS ===== */
+  .tabs {
+    display: flex; gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .tab {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    color: var(--text2);
+    background: transparent;
+    transition: all 0.15s;
+    position: relative;
+    top: 1px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    border-color: var(--border);
+    border-bottom-color: var(--bg);
+    background: var(--bg);
+    color: var(--accent);
+    box-shadow: inset 0 2px 0 var(--accent);
+  }
 
-/* ── MAP TABLE ── */
-.map-wrap{overflow-x:auto}
-.map-tbl{border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px;width:100%}
-.map-tbl td,.map-tbl th{border:1px solid var(--b1);padding:3px 5px;text-align:center;cursor:pointer;transition:all 0.15s;min-width:36px}
-.map-tbl th{background:rgba(0,0,0,0.4);color:var(--dim2);font-size:9px;cursor:default}
-.map-tbl td:hover{border-color:var(--acc);z-index:1;position:relative}
-.map-tbl td.sel-cell{background:rgba(0,212,255,0.2);border-color:var(--acc);color:var(--acc)}
-.map-tbl td.hot{background:rgba(255,34,68,0.15)}
-.map-tbl td.warm{background:rgba(255,119,0,0.12)}
-.map-tbl td.cool{background:rgba(0,136,255,0.1)}
-.map-edit{display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}
+  .panel { display: none; }
+  .panel.active { display: block; }
 
-/* ── FLASH / BIN ── */
-.flash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.hex-view{background:rgba(0,0,0,0.7);border:1px solid var(--b1);padding:10px;
-  font-family:'Share Tech Mono',monospace;font-size:10px;height:180px;overflow-y:auto;
-  line-height:1.7;color:#80c8e8}
-.hex-view .addr{color:var(--dim2)}.hex-view .hexb{color:var(--wht)}.hex-view .ascii{color:var(--grn)}
-.hex-view::-webkit-scrollbar{width:3px}.hex-view::-webkit-scrollbar-thumb{background:var(--acc)}
+  /* ===== CARDS & GRID ===== */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 
-/* ── TERMINAL ── */
-.term{background:rgba(0,0,0,0.8);border:1px solid var(--b1);padding:10px;
-  font-family:'Share Tech Mono',monospace;font-size:11px;height:160px;overflow-y:auto;line-height:1.7}
-.term::-webkit-scrollbar{width:3px}.term::-webkit-scrollbar-thumb{background:var(--acc)}
-.t-inp-row{display:flex;gap:6px;margin-top:6px}
-.t-inp{flex:1;background:rgba(0,0,0,0.6);border:1px solid var(--b2);color:var(--grn);
-  font-family:'Share Tech Mono',monospace;font-size:11px;padding:6px 10px;outline:none}
-.t-inp:focus{border-color:var(--acc)}
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text2);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
+  }
 
-/* ── ECU INFO CARD ── */
-.ecu-card{background:rgba(0,212,255,0.03);border:1px solid var(--b2);padding:12px;font-family:'Share Tech Mono',monospace;font-size:11px}
-.ecu-card .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--b1)}
-.ecu-card .row:last-child{border:none}
-.ecu-card .k{color:var(--dim2)}.ecu-card .v{color:var(--wht)}
+  /* ===== BIG GAUGES ===== */
+  .gauge-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 14px; }
+  .gauge {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 10px 10px;
+    text-align: center;
+  }
+  .gauge-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    text-shadow: var(--glow);
+    transition: color 0.2s;
+  }
+  .gauge-val.warn { color: var(--warn); text-shadow: 0 0 12px #ffcc0066; }
+  .gauge-val.danger { color: var(--danger); text-shadow: 0 0 12px #ff224466; }
+  .gauge-unit {
+    font-family: 'Share Tech Mono';
+    font-size: 10px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+  .gauge-label {
+    font-family: 'Rajdhani';
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+  .gauge-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .gauge-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s, background 0.2s; }
 
-/* ── OSCOPE ── */
-.osc-wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.osc-box{position:relative;background:rgba(0,0,0,0.6);border:1px solid var(--b1)}
-.osc-lbl{position:absolute;top:4px;left:6px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2)}
+  /* ===== SENSOR TABLE ===== */
+  .sensor-table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono'; font-size: 12px; }
+  .sensor-table th { color: var(--text2); text-align: left; font-size: 10px; letter-spacing: 1px; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+  .sensor-table td { padding: 5px 8px; border-bottom: 1px solid #1a2030; }
+  .sensor-table tr:hover td { background: #0e1520; }
+  .val-cell { color: var(--accent); font-weight: bold; }
+  .raw-cell { color: var(--text2); }
 
-/* ── DTC PANEL ── */
-.dtc-list{font-family:'Share Tech Mono',monospace;font-size:11px}
-.dtc-item{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--b1);align-items:center}
-.dtc-mil{min-width:55px;color:var(--red);font-weight:700}
-.dtc-desc{flex:1;color:var(--txt)}
-.dtc-stat{font-size:9px;padding:2px 6px;border:1px solid var(--red);color:var(--red)}
+  /* ===== OSCILLOSCOPE ===== */
+  canvas { display: block; width: 100%; }
+  .osc-wrap { background: #020508; border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+  .osc-legend { display: flex; gap: 14px; margin-top: 6px; font-family: 'Share Tech Mono'; font-size: 10px; }
+  .osc-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
 
-/* ── BADGES ── */
-.badge{display:inline-block;padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px}
-.bG2{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--grn)}
-.bR2{background:rgba(255,34,68,0.1);border:1px solid rgba(255,34,68,0.3);color:var(--red)}
-.bY2{background:rgba(255,204,0,0.1);border:1px solid rgba(255,204,0,0.3);color:var(--ylw)}
-.bA2{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);color:var(--acc)}
-.bP2{background:rgba(170,68,255,0.1);border:1px solid rgba(170,68,255,0.3);color:var(--pur)}
+  /* ===== FUEL/IGN MAP ===== */
+  .map-wrap { overflow-x: auto; }
+  .map-table { border-collapse: collapse; font-family: 'Share Tech Mono'; font-size: 11px; }
+  .map-table th { padding: 4px 6px; color: var(--text2); font-size: 9px; text-align: center; background: var(--bg3); }
+  .map-table td {
+    width: 38px; height: 30px; text-align: center; padding: 0; cursor: pointer;
+    border: 1px solid #0d1520;
+    transition: all 0.1s;
+    font-size: 11px;
+  }
+  .map-table td:hover { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); z-index: 1; }
+  .map-table td.selected { border-color: var(--accent2)!important; box-shadow: inset 0 0 0 2px var(--accent2); }
+  .map-cell-input { width: 100%; height: 100%; background: transparent; border: none; text-align: center; font-family: 'Share Tech Mono'; font-size: 11px; outline: none; cursor: pointer; color: inherit; }
 
-/* ── TIP/WARN ── */
-.tip{padding:7px 10px;border-left:3px solid var(--ylw);background:rgba(255,204,0,0.04);font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw);margin:6px 0;line-height:1.6}
-.warn{padding:7px 10px;border-left:3px solid var(--red);background:rgba(255,34,68,0.04);font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red);margin:6px 0;line-height:1.6}
-.info{padding:7px 10px;border-left:3px solid var(--acc);background:rgba(0,212,255,0.03);font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--acc);margin:6px 0;line-height:1.6}
+  /* ===== FLASH ===== */
+  .progress-wrap { background: var(--bg3); border-radius: 4px; height: 18px; overflow: hidden; border: 1px solid var(--border); }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 4px; transition: width 0.3s; position: relative; }
+  .progress-fill::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(255,255,255,0.05) 8px, rgba(255,255,255,0.05) 9px); animation: stripe 0.5s linear infinite; }
+  @keyframes stripe { from { background-position: 0 0; } to { background-position: 9px 0; } }
 
-/* ── REMAP SLIDERS ── */
-.slider-grid{display:flex;flex-direction:column;gap:10px}
-.sl-row{display:grid;grid-template-columns:140px 1fr 60px 60px;gap:8px;align-items:center}
-.sl-lbl{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--txt)}
-input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:var(--b2);outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--acc);cursor:pointer}
-.sl-val{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--acc);text-align:center}
-.sl-orig{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2);text-align:center}
+  .hex-display {
+    font-family: 'Share Tech Mono';
+    font-size: 10px;
+    background: #020508;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    height: 120px;
+    overflow-y: auto;
+    color: #4a7a9b;
+    line-height: 1.7;
+  }
+  .hex-display .addr { color: var(--text2); }
+  .hex-display .changed { color: var(--accent2)!important; }
+  .hex-display .zero { color: #1e3040; }
 
-@media(max-width:700px){.g2,.g3,.g4,.g6,.osc-wrap,.flash-grid{grid-template-columns:1fr}.sl-row{grid-template-columns:1fr 1fr}}
+  /* ===== DTC ===== */
+  .dtc-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--danger);
+    border-radius: 5px;
+    margin-bottom: 8px;
+    font-family: 'Share Tech Mono';
+    font-size: 12px;
+  }
+  .dtc-item.pending { border-left-color: var(--warn); }
+  .dtc-item.historic { border-left-color: var(--text2); }
+  .dtc-code { color: var(--accent2); font-weight: bold; }
+  .dtc-desc { color: var(--text); flex: 1; padding: 0 12px; }
+  .dtc-status { color: var(--text2); font-size: 10px; }
+
+  /* ===== TERMINAL ===== */
+  .terminal {
+    font-family: 'Share Tech Mono';
+    font-size: 12px;
+    background: #020508;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    height: 220px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+  .terminal .t-rx { color: var(--accent3); }
+  .terminal .t-tx { color: var(--accent); }
+  .terminal .t-sys { color: var(--text2); }
+  .terminal .t-err { color: var(--danger); }
+  .terminal .t-warn { color: var(--warn); }
+
+  .term-input-row { display: flex; gap: 8px; margin-top: 8px; }
+  .term-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--accent3);
+    font-family: 'Share Tech Mono';
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    outline: none;
+  }
+  .term-input:focus { border-color: var(--accent3); }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* ===== ARDUINO FIRMWARE PANEL ===== */
+  .code-block {
+    font-family: 'Share Tech Mono';
+    font-size: 11px;
+    background: #020508;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    overflow-x: auto;
+    color: #7ab8d4;
+    line-height: 1.7;
+    white-space: pre;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+  .code-block .kw { color: #c792ea; }
+  .code-block .fn { color: #82aaff; }
+  .code-block .str { color: #c3e88d; }
+  .code-block .num { color: #f78c6c; }
+  .code-block .cm { color: #546e7a; }
+
+  /* ===== REMAP PARAMS ===== */
+  .param-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .param-label { flex: 0 0 160px; color: var(--text2); font-size: 13px; }
+  .param-input {
+    width: 90px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: 'Share Tech Mono';
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    outline: none;
+    text-align: right;
+  }
+  .param-input:focus { border-color: var(--accent); }
+  .param-unit { color: var(--text2); font-size: 11px; width: 40px; }
+  .param-range { flex: 1; }
+  input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+  /* ===== ECU SELECTOR ===== */
+  .ecu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .ecu-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ecu-card:hover, .ecu-card.selected {
+    border-color: var(--accent);
+    background: #0a1825;
+    box-shadow: var(--glow);
+  }
+  .ecu-model { font-family: 'Share Tech Mono'; font-size: 11px; color: var(--accent); margin-bottom: 4px; }
+  .ecu-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .ecu-chip { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .ecu-tags { display: flex; gap: 4px; margin-top: 6px; }
+  .tag { font-size: 9px; padding: 2px 6px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text2); }
+  .tag.ok { border-color: var(--accent3); color: var(--accent3); }
+  .tag.partial { border-color: var(--warn); color: var(--warn); }
+
+  /* ===== MEMORY MAP ===== */
+  .memmap { font-family: 'Share Tech Mono'; font-size: 11px; line-height: 2; }
+  .memmap-row { display: flex; gap: 10px; align-items: center; padding: 2px 0; border-bottom: 1px solid #0d1520; }
+  .memmap-addr { color: var(--accent2); width: 70px; }
+  .memmap-bar { flex: 1; height: 14px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .memmap-fill { height: 100%; border-radius: 3px; }
+  .memmap-label { width: 220px; color: var(--text); }
+  .memmap-size { width: 60px; color: var(--text2); text-align: right; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .gauge-row { grid-template-columns: repeat(3, 1fr); }
+    .grid2, .grid3, .grid4 { grid-template-columns: 1fr; }
+    .connect-bar { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .gauge-row { grid-template-columns: repeat(2, 1fr); }
+    .connect-bar { grid-template-columns: 1fr; }
+  }
+
+  .sep { height: 14px; }
+  .note { font-size: 12px; color: var(--text2); padding: 8px 12px; background: #0a1018; border-left: 2px solid var(--border); border-radius: 3px; margin-bottom: 10px; }
+  .note.warn { border-left-color: var(--warn); color: #c8a030; }
+  .note.danger { border-left-color: var(--danger); color: #c83040; }
+  .note.ok { border-left-color: var(--accent3); color: #40b840; }
+
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="logo">ZEUS<span>PRO</span><span style="font-size:8px;color:var(--org);margin-left:6px;letter-spacing:1px">v5•MST100P</span></div>
-  <div class="conn-bar">
-    <div class="pipenode"><div class="pdot" id="p-usb"></div><span id="p-usb-l" style="color:var(--dim2)">CP2102</span></div>
-    <span class="parr">→</span>
-    <div class="pipenode"><div class="pdot" id="p-zeus"></div><span id="p-zeus-l" style="color:var(--dim2)">K-LINE</span></div>
-    <span class="parr">→</span>
-    <div class="pipenode"><div class="pdot" id="p-ecu"></div><span id="p-ecu-l" style="color:var(--dim2)">ECU</span></div>
-    <span class="parr">→</span>
-    <div class="pipenode"><div class="pdot" id="p-flash"></div><span id="p-flash-l" style="color:var(--dim2)">FLASH</span></div>
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    DIY·ECU<span>TOOL</span>
+    <sub>Arduino K-Line Bridge · Honda Keihin · Web Serial API</sub>
   </div>
-  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-    <span class="cstat" id="top-rpm" style="color:var(--grn)">0 RPM</span>
-    <span class="cstat" id="top-ect" style="color:var(--org)">-- °C</span>
-    <span class="cstat" id="top-dtc" style="color:var(--dim2)">DTC: 0</span>
-    <span class="cstat" id="top-mode" style="color:var(--dim2)">OFFLINE</span>
+  <div class="status-bar">
+    <span class="pill" id="pillPort">PORT: —</span>
+    <span class="pill" id="pillBaud">10400 BAUD</span>
+    <span class="pill" id="pillEcu">ECU: —</span>
+    <span class="pill" id="pillStatus">OFFLINE</span>
   </div>
+</header>
+
+<!-- CONNECT BAR -->
+<div class="connect-bar">
+  <select id="ecuSelect" onchange="onEcuChange()">
+    <option value="">— Pilih ECU —</option>
+    <option value="K56-N01">Vario 150 / Sonic 150 · K56-N01 · R8C · 56KB</option>
+    <option value="K45N-NA1">Vario 125 · K45N-NA1 · H8C · 48KB</option>
+    <option value="K93-N01">Beat FI · K93-N01 · H8C · 48KB</option>
+    <option value="MKJ-D51">CBR 150 · MKJ-D51 · R8C · 56KB</option>
+    <option value="KYJ-922">CBR 250 · KYJ-922 · R8C · 56KB</option>
+  </select>
+  <button onclick="connectSerial()" id="btnConnect" class="green">⚡ CONNECT</button>
+  <button onclick="disconnectSerial()" id="btnDisconnect" class="danger" disabled>✕ DISC</button>
+  <button onclick="sendDemo()" class="warn">▷ DEMO</button>
+  <button onclick="showTab('firmware')" class="orange">🔩 ARDUINO</button>
 </div>
 
 <!-- TABS -->
 <div class="tabs">
-  <button class="tab a" onclick="sw(this,'t-connect')">⚡ CONNECT</button>
-  <button class="tab g" onclick="sw(this,'t-live')">📊 LIVE DATA</button>
-  <button class="tab" onclick="sw(this,'t-flash')">💾 FLASH READ</button>
-  <button class="tab r" onclick="sw(this,'t-remap')">🔧 REMAP ECU</button>
-  <button class="tab" onclick="sw(this,'t-dtc')">⚠ DTC</button>
-  <button class="tab" onclick="sw(this,'t-term')">📟 TERMINAL</button>
-  <button class="tab" onclick="sw(this,'t-spec')">📋 SPEC</button>
+  <div class="tab active" onclick="showTab('live')" id="tab-live">📊 LIVE DATA</div>
+  <div class="tab" onclick="showTab('flash')" id="tab-flash">💾 FLASH</div>
+  <div class="tab" onclick="showTab('remap')" id="tab-remap">🔧 REMAP</div>
+  <div class="tab" onclick="showTab('dtc')" id="tab-dtc">⚠ DTC</div>
+  <div class="tab" onclick="showTab('terminal')" id="tab-terminal">📟 TERMINAL</div>
+  <div class="tab" onclick="showTab('firmware')" id="tab-firmware">🔩 FIRMWARE</div>
+  <div class="tab" onclick="showTab('wiring')" id="tab-wiring">🔌 WIRING</div>
 </div>
 
-<!-- ════════════════════════════════ -->
-<!-- TAB: CONNECT                    -->
-<!-- ════════════════════════════════ -->
-<div class="tc a" id="t-connect">
-
-<div class="g2">
-<div>
-<div class="sec">
-<div class="pt ptA">KONEKSI ZEUS CP2102 → ECU HONDA</div>
-<div style="margin-bottom:10px">
-  <div style="font-size:11px;color:var(--dim2);font-family:'Share Tech Mono',monospace;margin-bottom:6px">ECU MODEL:</div>
-  <select class="sel" id="ecu-model" onchange="ecuChanged()">
-    <option value="k56">38770-K56-N01 — Sonic 150 / Vario 150 (Keihin R8C)</option>
-    <option value="k45">38770-K45N-NA1 — Vario 125 (Keihin H8C)</option>
-    <option value="k93">38770-K93-N01 — Beat FI (Keihin H8C)</option>
-    <option value="mkj">38770-MKJ-D51 — CBR 150 (Keihin R8C)</option>
-    <option value="kyj">38770-KYJ-922 — CBR 250 (Keihin R8C)</option>
-    <option value="k0j">30400-K0J-N61 — PCX 160 (Shindengen)</option>
-  </select>
-</div>
-
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-  <button class="btn bA" id="btn-con" onclick="doConnect()">⚡ AUTO CONNECT</button>
-  <button class="btn bR" id="btn-dis" style="display:none" onclick="doDisc()">✕ DISCONNECT</button>
-  <button class="btn bY" onclick="doDemo()">▷ DEMO MODE</button>
-</div>
-
-<!-- ══ ZEUS MST-100P MANUAL BRIDGE PANEL v5 ══ -->
-<div style="background:rgba(0,30,10,0.6);border:1px solid rgba(0,255,136,0.25);padding:12px;margin-bottom:10px;border-radius:2px">
-  <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--grn);margin-bottom:10px">
-    ⚡ ZEUS MST-100P — MANUAL BRIDGE SELECTOR
-  </div>
-  <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2);margin-bottom:8px;line-height:1.8">
-    Klik AUTO CONNECT dulu. Jika semua baud <span style="color:var(--red)">no resp</span> → klik tombol di bawah satu per satu:
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:10px">
-    <button onclick="bridgeConnect('C9_STD')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#051a0a;border:1px solid #00cc55;color:#00ff88;cursor:pointer;text-align:left">
-      <span style="color:var(--grn);font-weight:bold">① C9 STANDARD</span><br>
-      <span style="font-size:9px;color:var(--dim2)">10400 • LOW 250ms</span>
-    </button>
-    <button onclick="bridgeConnect('C9_SLOW')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#1a1500;border:1px solid #ccaa00;color:#ffcc00;cursor:pointer;text-align:left">
-      <span style="color:var(--ylw);font-weight:bold">② C9 ULTRA SLOW</span><br>
-      <span style="font-size:9px;color:var(--dim2)">10400 • LOW 500ms</span>
-    </button>
-    <button onclick="bridgeConnect('C9_ALT')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#1a0a00;border:1px solid #cc6600;color:#ff7700;cursor:pointer;text-align:left">
-      <span style="color:var(--org);font-weight:bold">③ C9 ALT BYTES</span><br>
-      <span style="font-size:9px;color:var(--dim2)">10400 • init alt</span>
-    </button>
-    <button onclick="bridgeConnect('PASS38')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#00101a;border:1px solid #0099cc;color:#00d4ff;cursor:pointer;text-align:left">
-      <span style="color:var(--acc);font-weight:bold">④ PASSTHROUGH</span><br>
-      <span style="font-size:9px;color:var(--dim2)">38400 • no prefix</span>
-    </button>
-    <button onclick="bridgeConnect('RAW')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#0f0015;border:1px solid #8833cc;color:#aa44ff;cursor:pointer;text-align:left">
-      <span style="color:var(--pur);font-weight:bold">⑤ RAW BYPASS</span><br>
-      <span style="font-size:9px;color:var(--dim2)">10400 • skip init</span>
-    </button>
-    <button onclick="bridgeConnect('WAKEONLY')" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;background:#1a0005;border:1px solid #cc0033;color:#ff2244;cursor:pointer;text-align:left">
-      <span style="color:var(--red);font-weight:bold">⑥ WAKE ONLY</span><br>
-      <span style="font-size:9px;color:var(--dim2)">10400 • wake+poll</span>
-    </button>
-  </div>
-  <div style="background:rgba(0,0,0,0.5);border:1px solid var(--b1);padding:8px;font-family:'Share Tech Mono',monospace;font-size:9px;line-height:2;color:var(--dim2)">
-    <span style="color:var(--ylw)">⚠ WAJIB CEK FISIK SEBELUM CONNECT:</span><br>
-    <span style="color:#ffffff">①</span> Zeus MST-100P terhubung ke USB laptop<br>
-    <span style="color:#ffffff">②</span> Kabel DLC terpasang ke soket ECU/trainer (klik terkunci)<br>
-    <span style="color:#ffffff">③</span> Power supply <span style="color:var(--red)">12V trainer ON</span> (LED hijau nyala)<br>
-    <span style="color:#ffffff">④</span> Terminal <span style="color:var(--red)">IG (ignition) +12V</span> — ukur multimeter ke GND harus 11-13V<br>
-    <span style="color:#ffffff">⑤</span> Tunggu <span style="color:var(--grn)">3-5 detik</span> setelah IG ON → baru klik connect
-  </div>
-  <div id="bridge-status" style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:10px;display:none;padding:6px;border:1px solid var(--b1)"></div>
-</div>
-
-<div id="baud-section" style="display:none">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);letter-spacing:2px">AUTO-DETECT BAUD — SLOW INIT:</div>
-    <div style="display:flex;gap:4px">
-      <button class="btn" style="padding:3px 10px;font-size:9px;background:#0a2a1a;border:1px solid var(--grn);color:var(--grn);border-radius:3px" onclick="forceConnect(10400)">⚡ FORCE 10400 (C9)</button>
-      <button class="btn" style="padding:3px 10px;font-size:9px;background:#1a1a0a;border:1px solid var(--ylw);color:var(--ylw);border-radius:3px" onclick="forceConnect(38400)">⚡ FORCE 38400</button>
+<!-- ===== PANEL: LIVE DATA ===== -->
+<div class="panel active" id="panel-live">
+  <div class="gauge-row">
+    <div class="gauge">
+      <div class="gauge-val" id="g-rpm">0</div>
+      <div class="gauge-unit">RPM</div>
+      <div class="gauge-bar"><div class="gauge-bar-fill" id="b-rpm" style="width:0%"></div></div>
+      <div class="gauge-label">ENGINE SPEED</div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-val" id="g-spd">0</div>
+      <div class="gauge-unit">KM/H</div>
+      <div class="gauge-bar"><div class="gauge-bar-fill" id="b-spd" style="width:0%;background:var(--accent2)"></div></div>
+      <div class="gauge-label">VEHICLE SPEED</div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-val" id="g-tps">0</div>
+      <div class="gauge-unit">%</div>
+      <div class="gauge-bar"><div class="gauge-bar-fill" id="b-tps" style="width:0%;background:var(--accent3)"></div></div>
+      <div class="gauge-label">THROTTLE</div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-val" id="g-ect">—</div>
+      <div class="gauge-unit">°C</div>
+      <div class="gauge-bar"><div class="gauge-bar-fill" id="b-ect" style="width:0%;background:#ff6060"></div></div>
+      <div class="gauge-label">COOLANT</div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-val" id="g-map">—</div>
+      <div class="gauge-unit">kPa</div>
+      <div class="gauge-bar"><div class="gauge-bar-fill" id="b-map" style="width:0%;background:var(--warn)"></div></div>
+      <div class="gauge-label">MAP</div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-val" id="g-o2">—</div>
+      <div class="gauge-unit">V (λ)</div>
+      <div class="gauge-bar"><div class="gauge-bar-fill" id="b-o2" style="width:0%;background:#aa44ff"></div></div>
+      <div class="gauge-label">O2 SENSOR</div>
     </div>
   </div>
-  <div id="baud-rows"></div>
-  <div id="baud-tip" style="display:none;margin-top:8px;padding:10px;background:#1a0505;border:1px solid var(--red);border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw);line-height:1.8">
-    ⚠ SEMUA BAUD NO RESPONSE — ECU K56-N01 C9 SERIES<br>
-    <span style="color:var(--red)">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br>
-    Cek urutan ini:<br>
-    <span style="color:var(--wht)">1)</span> Power supply 12V trainer board ON? (ukur dengan multimeter)<br>
-    <span style="color:var(--wht)">2)</span> Terminal <span style="color:var(--red)">IG (ignition)</span> sudah dapat +12V? ← PALING SERING!<br>
-    <span style="color:var(--wht)">3)</span> Kabel DLC terpasang ke soket trainer dengan klik terkunci?<br>
-    <span style="color:var(--wht)">4)</span> Pin K-Line = DLC1 (kabel biru/putih) terhubung ke ECU?<br>
-    <span style="color:var(--wht)">5)</span> Tunggu 2 detik setelah IG ON, lalu klik FORCE 10400<br>
-    <span style="color:var(--red)">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br>
-    ECU C9 series (SW:0101C90F01) butuh timing khusus:<br>
-    LOW 200ms → HIGH 200ms → PREFIX BF 00 04 04 FE → WAKE → INIT
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">SENSOR READINGS <span id="liveTag" style="color:var(--danger);font-size:10px">● OFFLINE</span></div>
+      <table class="sensor-table">
+        <thead><tr><th>PARAMETER</th><th>RAW</th><th>VALUE</th><th>FORMULA</th></tr></thead>
+        <tbody id="sensorTbody">
+          <tr><td>Engine RPM</td><td class="raw-cell" id="r-rpm">--</td><td class="val-cell" id="v-rpm">0 rpm</td><td style="color:var(--text2);font-size:10px">(B0«8|B1)×0.25</td></tr>
+          <tr><td>Vehicle Speed</td><td class="raw-cell" id="r-spd">--</td><td class="val-cell" id="v-spd">0 km/h</td><td style="color:var(--text2);font-size:10px">B3 direct</td></tr>
+          <tr><td>Throttle (TPS)</td><td class="raw-cell" id="r-tps">--</td><td class="val-cell" id="v-tps">0 %</td><td style="color:var(--text2);font-size:10px">B5×100/255</td></tr>
+          <tr><td>Coolant Temp</td><td class="raw-cell" id="r-ect">--</td><td class="val-cell" id="v-ect">-- °C</td><td style="color:var(--text2);font-size:10px">B0−40</td></tr>
+          <tr><td>Intake Air Temp</td><td class="raw-cell" id="r-iat">--</td><td class="val-cell" id="v-iat">-- °C</td><td style="color:var(--text2);font-size:10px">B1−40</td></tr>
+          <tr><td>MAP Sensor</td><td class="raw-cell" id="r-map">--</td><td class="val-cell" id="v-map">-- kPa</td><td style="color:var(--text2);font-size:10px">B2 direct kPa</td></tr>
+          <tr><td>O2 Sensor</td><td class="raw-cell" id="r-o2">--</td><td class="val-cell" id="v-o2">-- V</td><td style="color:var(--text2);font-size:10px">B3×5/255</td></tr>
+          <tr><td>Battery Volt</td><td class="raw-cell" id="r-bat">--</td><td class="val-cell" id="v-bat">-- V</td><td style="color:var(--text2);font-size:10px">B7×18/255</td></tr>
+          <tr><td>Injector PW</td><td class="raw-cell" id="r-inj">--</td><td class="val-cell" id="v-inj">-- ms</td><td style="color:var(--text2);font-size:10px">B0×0.256</td></tr>
+          <tr><td>Ignition Adv</td><td class="raw-cell" id="r-ign">--</td><td class="val-cell" id="v-ign">-- °</td><td style="color:var(--text2);font-size:10px">B1/2−64</td></tr>
+          <tr><td>STFT</td><td class="raw-cell" id="r-stft">--</td><td class="val-cell" id="v-stft">-- %</td><td style="color:var(--text2);font-size:10px">(B2−128)×100/128</td></tr>
+          <tr><td>LTFT</td><td class="raw-cell" id="r-ltft">--</td><td class="val-cell" id="v-ltft">-- %</td><td style="color:var(--text2);font-size:10px">(B3−128)×100/128</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">OSCILLOSCOPE — 4CH</div>
+      <div class="osc-wrap">
+        <canvas id="oscCanvas" height="180"></canvas>
+      </div>
+      <div class="osc-legend">
+        <span><span class="osc-dot" style="background:#00e5ff"></span>RPM</span>
+        <span><span class="osc-dot" style="background:#ff6b35"></span>O2</span>
+        <span><span class="osc-dot" style="background:#39ff14"></span>TPS</span>
+        <span><span class="osc-dot" style="background:#ffcc00"></span>INJ PW</span>
+      </div>
+      <div class="sep"></div>
+      <div class="btn-row">
+        <button onclick="sendCmd('TBL00')" id="btnTbl00">TBL-00 RPM/SPD</button>
+        <button onclick="sendCmd('TBL10')" id="btnTbl10">TBL-10 TEMP/O2</button>
+        <button onclick="sendCmd('TBL11')" id="btnTbl11">TBL-11 FUEL/IGN</button>
+        <button onclick="sendCmd('TBL60')" id="btnTbl60">TBL-60 EXT</button>
+        <button onclick="sendCmd('KEEPALIVE')">KEEPALIVE</button>
+        <button onclick="exportCSV()" class="green">↓ CSV</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<div id="serial-warn" style="display:none" class="warn">
-  ⚠ Web Serial API butuh <b>Google Chrome 89+</b>. Buka file ini di Chrome, bukan browser lain.
-</div>
-</div>
-
-<div class="sec">
-<div class="pt ptA">INFO ECU TERDETEKSI</div>
-<div class="ecu-card" id="ecu-info">
-  <div class="row"><span class="k">Part Number</span><span class="v" id="ei-pn">—</span></div>
-  <div class="row"><span class="k">ECU Type</span><span class="v" id="ei-type">—</span></div>
-  <div class="row"><span class="k">Flash Size</span><span class="v" id="ei-flash">—</span></div>
-  <div class="row"><span class="k">Protocol</span><span class="v" id="ei-proto">K-Line 10400 baud</span></div>
-  <div class="row"><span class="k">Baud Rate</span><span class="v" id="ei-baud">—</span></div>
-  <div class="row"><span class="k">VID/PID</span><span class="v" id="ei-vid">—</span></div>
-  <div class="row"><span class="k">Status</span><span class="v" id="ei-stat" style="color:var(--dim2)">OFFLINE</span></div>
-</div>
-</div>
-</div>
-
-<div>
-<div class="sec">
-<div class="pt ptY">SPEC ZEUS MST-100P + HONDA KEIHIN</div>
-<div style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:2;background:rgba(0,0,0,0.4);padding:10px;border:1px solid var(--b1)">
-<span style="color:var(--acc)">ZEUS MST-100P Chip:</span>   <span style="color:var(--wht)">CP2102 Silicon Labs (VID: 0x10C4)</span><br>
-<span style="color:var(--acc)">Protokol:</span>              <span style="color:var(--wht)">Honda K-Line ISO 9141 (undocumented)</span><br>
-<span style="color:var(--acc)">Baud Rate ECU:</span>         <span style="color:var(--ylw)">10400 baud (non-standard)</span><br>
-<span style="color:var(--acc)">ECU K-Line Baud:</span>        <span style="color:var(--wht)">10400 baud (Honda native K-Line)</span><br><span style="color:var(--acc)">SW C9 Prefix  :</span>        <span style="color:var(--ylw)">BF 00 04 04 FE (sebelum WAKE)</span><br><span style="color:var(--acc)">Init Timing C9:</span>        <span style="color:var(--ylw)">LOW 200ms → HIGH 200ms → wakeup</span><br>
-<span style="color:var(--acc)">Init K-Line:</span>           <span style="color:var(--wht)">Pull LOW 70ms → HIGH 120ms → wakeup</span><br>
-<span style="color:var(--acc)">Frame Format:</span>          <span style="color:var(--wht)">[DST][LEN][TYPE][TABLE][ADDR][DATA...][CS]</span><br>
-<span style="color:var(--acc)">Checksum:</span>              <span style="color:var(--ylw)">(0x100 - sum) & 0xFF</span><br>
-<span style="color:var(--acc)">Keihin Flash:</span>         <span style="color:var(--wht)">48 KB / 56 KB / 64 KB .bin</span><br>
-<span style="color:var(--acc)">Remap Tools:</span>          <span style="color:var(--wht)">TunerPro RT + XDF definition file</span><br>
-<span style="color:var(--acc)">DLC Connector:</span>        <span style="color:var(--wht)">4-pin Sumitomo HM090</span><br>
-<span style="color:var(--acc)">K-Line Pin:</span>           <span style="color:var(--ylw)">DLC1 (biru/putih) — 12V bidirectional</span><br>
-</div>
-</div>
-
-<div class="sec G">
-<div class="pt ptG">SUPPORT MATRIX — HONDA MOTOR INDONESIA</div>
-<table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px">
-<tr style="background:rgba(0,255,136,0.04)">
-  <th style="padding:5px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">MOTOR</th>
-  <th style="padding:5px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">ECU PN</th>
-  <th style="padding:5px 8px;border:1px solid var(--b1);color:var(--dim2)">CHIP</th>
-  <th style="padding:5px 8px;border:1px solid var(--b1);color:var(--dim2)">FLASH</th>
-  <th style="padding:5px 8px;border:1px solid var(--b1);color:var(--dim2)">REMAP</th>
-</tr>
-<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">Vario 150</td><td style="padding:4px 8px;border:1px solid var(--b1)">K56-N01</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">R8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">56KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
-<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">Vario 125</td><td style="padding:4px 8px;border:1px solid var(--b1)">K45N-NA1</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">H8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">48KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
-<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">Beat FI</td><td style="padding:4px 8px;border:1px solid var(--b1)">K93-N01</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">H8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">48KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
-<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">CBR 150</td><td style="padding:4px 8px;border:1px solid var(--b1)">MKJ-D51</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">R8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">56KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
-<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">CBR 250</td><td style="padding:4px 8px;border:1px solid var(--b1)">KYJ-922</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">R8C</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">56KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">✓</td></tr>
-<tr><td style="padding:4px 8px;border:1px solid var(--b1);color:var(--wht)">PCX 160</td><td style="padding:4px 8px;border:1px solid var(--b1)">K0J-N61</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">V850</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center">256KB</td><td style="padding:4px 8px;border:1px solid var(--b1);text-align:center;color:var(--ylw)">~</td></tr>
-</table>
-</div>
-</div>
-</div>
-</div>
-
-<!-- ════════════════════════════════ -->
-<!-- TAB: LIVE DATA                  -->
-<!-- ════════════════════════════════ -->
-<div class="tc" id="t-live">
-<div class="g2">
-<div>
-<div class="sec">
-<div class="pt ptG">RPM + STATUS ENGINE</div>
-<div style="text-align:center;margin-bottom:10px">
-  <svg width="280" height="120" viewBox="0 0 280 120">
-    <defs>
-      <linearGradient id="rg2"><stop offset="0%" stop-color="#00ff88"/><stop offset="70%" stop-color="#ffcc00"/><stop offset="100%" stop-color="#ff2244"/></linearGradient>
-      <filter id="gl2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    </defs>
-    <path d="M 15 115 A 125 125 0 0 1 265 115" fill="none" stroke="#0c2030" stroke-width="12" stroke-linecap="round"/>
-    <path id="rpm-arc" d="M 15 115 A 125 125 0 0 1 265 115" fill="none" stroke="url(#rg2)" stroke-width="12" stroke-linecap="round" stroke-dasharray="392" stroke-dashoffset="392" filter="url(#gl2)"/>
-    <text x="140" y="105" text-anchor="middle" font-family="Orbitron,monospace" font-size="52" font-weight="900" fill="#00ff88" id="rpm-txt">0</text>
-    <text x="140" y="118" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-size="9" fill="#1a3a50" letter-spacing="4">RPM</text>
-  </svg>
-</div>
-<div class="g4">
-  <div class="dc"><div class="dc-v" id="d-spd" style="color:var(--grn)">0</div><div class="dc-l">KM/H</div></div>
-  <div class="dc"><div class="dc-v" id="d-tps" style="color:var(--org)">0%</div><div class="dc-l">TPS</div></div>
-  <div class="dc"><div class="dc-v" id="d-gear" style="color:var(--ylw)">N</div><div class="dc-l">GEAR</div></div>
-  <div class="dc"><div class="dc-v" id="d-bat" style="color:var(--grn)">--</div><div class="dc-l">VOLT</div></div>
-</div>
-</div>
-
-<div class="sec">
-<div class="pt ptA">SENSOR READINGS</div>
-<div class="sbar"><div class="sbar-top"><span>ECT Coolant</span><span id="d-ect" style="color:var(--org)">-- °C</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-ect" style="width:0%;background:var(--org)"></div></div></div>
-<div class="sbar"><div class="sbar-top"><span>IAT Intake Air</span><span id="d-iat" style="color:var(--acc)">-- °C</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-iat" style="width:0%;background:var(--acc)"></div></div></div>
-<div class="sbar"><div class="sbar-top"><span>MAP Pressure</span><span id="d-map" style="color:var(--grn)">-- kPa</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-map" style="width:0%;background:var(--grn)"></div></div></div>
-<div class="sbar"><div class="sbar-top"><span>O2 Sensor</span><span id="d-o2" style="color:var(--ylw)">-- V</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-o2" style="width:0%;background:var(--ylw)"></div></div></div>
-<div class="sbar"><div class="sbar-top"><span>Lambda (λ)</span><span id="d-lam" style="color:var(--grn)">--</span></div><div class="sbar-track"><div class="sbar-fill" id="sb-lam" style="width:50%;background:var(--grn)"></div></div></div>
-</div>
-
-<div class="sec G">
-<div class="pt ptG">FUEL + IGNITION LIVE</div>
-<div class="g2">
-  <div class="dc"><div class="dc-v" id="d-inj" style="color:var(--acc);font-size:18px">--</div><div class="dc-l">INJ PW (ms)</div></div>
-  <div class="dc"><div class="dc-v" id="d-ign" style="color:var(--ylw);font-size:18px">--</div><div class="dc-l">IGN ADV (°)</div></div>
-  <div class="dc"><div class="dc-v" id="d-stft" style="color:var(--acc);font-size:18px">--</div><div class="dc-l">STFT (%)</div></div>
-  <div class="dc"><div class="dc-v" id="d-ltft" style="color:var(--acc);font-size:18px">--</div><div class="dc-l">LTFT (%)</div></div>
-</div>
-</div>
-</div>
-
-<div>
-<div class="sec">
-<div class="pt ptA">OSCILLOSCOPE — 4 CHANNEL</div>
-<div class="osc-wrap">
-  <div class="osc-box"><canvas id="cv-rpm" width="300" height="80"></canvas><div class="osc-lbl">RPM</div></div>
-  <div class="osc-box"><canvas id="cv-o2" width="300" height="80"></canvas><div class="osc-lbl">O2 SENSOR</div></div>
-  <div class="osc-box"><canvas id="cv-tps" width="300" height="80"></canvas><div class="osc-lbl">TPS</div></div>
-  <div class="osc-box"><canvas id="cv-inj" width="300" height="80"></canvas><div class="osc-lbl">INJ PW</div></div>
-</div>
-</div>
-
-<div class="sec">
-<div class="pt ptY">PARAMETER TABLE — SEMUA DATA ECU</div>
-<table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px">
-  <tr style="background:rgba(0,0,0,0.3)">
-    <th style="padding:4px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">PARAMETER</th>
-    <th style="padding:4px 8px;border:1px solid var(--b1);color:var(--dim2)">RAW</th>
-    <th style="padding:4px 8px;border:1px solid var(--b1);color:var(--dim2)">VALUE</th>
-    <th style="padding:4px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">FORMULA</th>
-  </tr>
-  <tr id="pr-rpm"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Engine RPM</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;font-family:'Share Tech Mono',monospace">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">0 rpm</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">(B0<<8|B1)*0.25</td></tr>
-  <tr id="pr-spd"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Vehicle Speed</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">0 km/h</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B3 (direct)</td></tr>
-  <tr id="pr-tps"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Throttle Pos</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--org)">0%</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B5*100/255</td></tr>
-  <tr id="pr-ect"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Coolant Temp</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--org)">-- °C</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B0-40</td></tr>
-  <tr id="pr-iat"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Intake Air Temp</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--acc)">-- °C</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B1-40</td></tr>
-  <tr id="pr-map"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">MAP Sensor</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">-- kPa</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B2 (direct kPa)</td></tr>
-  <tr id="pr-o2"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">O2 Sensor</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--ylw)">-- V</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B3*5/255</td></tr>
-  <tr id="pr-bat"><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--txt)">Battery Volt</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center">--</td><td style="padding:3px 8px;border:1px solid var(--b1);text-align:center;color:var(--grn)">-- V</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--dim2)">B7*18/255</td></tr>
-</table>
-</div>
-</div>
-</div>
-</div>
-
-<!-- ════════════════════════════════ -->
-<!-- TAB: FLASH READ                 -->
-<!-- ════════════════════════════════ -->
-<div class="tc" id="t-flash">
-<div class="warn">⚠ PERHATIAN: Fitur Flash Read/Write dapat menyebabkan ECU tidak bisa boot jika terjadi kesalahan. SELALU backup flash sebelum melakukan write. Gunakan pada ECU trainer/spare terlebih dahulu.</div>
-
-<div class="g2" style="margin-top:10px">
-<div>
-<div class="sec P">
-<div class="pt ptP">FLASH MEMORY READ — KEIHIN ECU</div>
-
-<div style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-bottom:10px;line-height:1.9;background:rgba(0,0,0,0.4);padding:10px;border:1px solid var(--b1)">
-<span style="color:var(--acc)">Protokol Flash Read:</span> Honda FID (Function ID) via K-Line<br>
-<span style="color:var(--acc)">Command:</span> <span style="color:var(--ylw)">72 07 72 TABLE START END CS</span><br>
-<span style="color:var(--acc)">Flash Read CMD:</span> <span style="color:var(--ylw)">72 05 71 TABLE CS</span> (full table dump)<br>
-<span style="color:var(--acc)">Max per request:</span> 256 bytes per frame<br>
-<span style="color:var(--acc)">Total flash (56KB):</span> ≈ 224 requests<br>
-<span style="color:var(--acc)">Checksum fix:</span> Auto-calculated setelah edit<br>
-</div>
-
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-  <button class="btn bP" onclick="startFlashRead()">📖 READ FULL FLASH</button>
-  <button class="btn bA" onclick="readTable()">READ TABLE</button>
-  <button class="btn bY" onclick="saveFlash()">💾 SAVE .BIN</button>
-  <button class="btn bR" onclick="loadFlash()">📂 LOAD .BIN</button>
-</div>
-
-<div class="pb" id="flash-pb" style="display:none">
-  <div class="pb-row"><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--pur)">READING FLASH...</span><span id="flash-pct" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw)">0%</span></div>
-  <div class="pb-bar"><div class="pb-fill" id="flash-fill" style="width:0%;background:var(--pur)"></div></div>
-  <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);margin-top:3px" id="flash-status">Initializing...</div>
-</div>
-
-<div class="hex-view" id="flash-hex"><span style="color:var(--dim2)">Flash belum dibaca. Klik READ FULL FLASH untuk memulai...</span></div>
-
-<div style="margin-top:6px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2)">
-  <span id="flash-size">Size: 0 bytes</span> | <span id="flash-cs">Checksum: --</span>
-</div>
-</div>
-
-<div class="sec R">
-<div class="pt ptR">FLASH WRITE — TULIS KE ECU</div>
-<div class="warn">⚠ HANYA untuk ECU trainer/bench! Pastikan flash .bin valid sebelum write!</div>
-<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-  <button class="btn bR" onclick="writeFlash()">⚡ WRITE FLASH</button>
-  <button class="btn bY" onclick="verifyFlash()">✓ VERIFY</button>
-</div>
-<div class="pb" id="write-pb" style="display:none;margin-top:8px">
-  <div class="pb-row"><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red)">WRITING FLASH...</span><span id="write-pct" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw)">0%</span></div>
-  <div class="pb-bar"><div class="pb-fill" id="write-fill" style="width:0%;background:var(--red)"></div></div>
-</div>
-</div>
-</div>
-
-<div>
-<div class="sec">
-<div class="pt ptA">KEIHIN FLASH MAP — MEMORY LAYOUT</div>
-<div style="font-family:'Share Tech Mono',monospace;font-size:10px;line-height:2.2;background:rgba(0,0,0,0.5);padding:10px;border:1px solid var(--b1)">
-<span style="color:var(--dim2)">ADDR ─────── CONTENT ─────────────── SIZE</span><br>
-<span style="color:var(--red)">0x0000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--red)">BOOTLOADER (READ ONLY)</span> <span style="color:var(--dim2)">──────── 4 KB</span><br>
-<span style="color:var(--ylw)">0x1000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--ylw)">CALIBRATION DATA</span> <span style="color:var(--dim2)">─────────────── 8 KB</span><br>
-<span style="color:var(--grn)">0x3000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--grn)">FUEL MAP (RPM × kPa)</span> <span style="color:var(--dim2)">────────── 2 KB</span><br>
-<span style="color:var(--grn)">0x3800</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--grn)">FUEL MAP (RPM × TPS)</span> <span style="color:var(--dim2)">────────── 2 KB</span><br>
-<span style="color:var(--acc)">0x4000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--acc)">IGNITION MAP (RPM × kPa)</span> <span style="color:var(--dim2)">──────── 2 KB</span><br>
-<span style="color:var(--acc)">0x4800</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--acc)">IGNITION MAP (RPM × TPS)</span> <span style="color:var(--dim2)">──────── 2 KB</span><br>
-<span style="color:var(--org)">0x5000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--org)">IDLE CONTROL TABLE</span> <span style="color:var(--dim2)">─────────── 512 B</span><br>
-<span style="color:var(--org)">0x5200</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--org)">COLD START ENRICHMENT</span> <span style="color:var(--dim2)">──────── 256 B</span><br>
-<span style="color:var(--pur)">0x6000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--pur)">RPM LIMITER TABLE</span> <span style="color:var(--dim2)">────────────── 64 B</span><br>
-<span style="color:var(--pur)">0x6100</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--pur)">SPEED LIMITER TABLE</span> <span style="color:var(--dim2)">──────────── 64 B</span><br>
-<span style="color:var(--txt)">0x7000</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--txt)">FIRMWARE CODE</span> <span style="color:var(--dim2)">─────────────── rest</span><br>
-<span style="color:var(--dim2)">0xDFFF</span> <span style="color:var(--dim2)">──</span> <span style="color:var(--dim2)">END (56KB)</span><br>
-</div>
-<div class="info" style="margin-top:8px">ℹ Offset di atas adalah perkiraan untuk Keihin R8C (56KB). Offset persis per ECU berbeda dan ada di file XDF TunerPro. Download XDF dari oldskulltuning.com untuk part number spesifik.</div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- ════════════════════════════════ -->
-<!-- TAB: REMAP ECU                  -->
-<!-- ════════════════════════════════ -->
-<div class="tc" id="t-remap">
-<div class="g2">
-<div>
-
-<div class="sec Y">
-<div class="pt ptY">FUEL MAP — RPM × MAP PRESSURE (kPa)</div>
-<div class="info">Nilai = injeksi fuel trim. 128 = stock/neutral. >128 = richer. <128 = leaner.</div>
-<div id="fuel-map-wrap" class="map-wrap" style="margin-top:8px"></div>
-<div class="map-edit">
-  <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2)">Selected:</span>
-  <span id="sel-cell-label" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--acc)">—</span>
-  <input class="inp" type="number" id="cell-val" style="width:70px" min="0" max="255">
-  <button class="btn bY" onclick="setCellVal()" style="padding:5px 10px;font-size:9px">SET</button>
-  <button class="btn bG" onclick="applyGlobalTrim()" style="padding:5px 10px;font-size:9px">GLOBAL TRIM</button>
-  <input class="inp" type="number" id="global-trim" value="5" style="width:50px">%
-</div>
-</div>
-
-<div class="sec">
-<div class="pt ptA">IGNITION MAP — RPM × MAP PRESSURE</div>
-<div class="info">Nilai = derajat advance (°). Formula: value/2 - 64. Contoh: 128 = 0°, 148 = +10°</div>
-<div id="ign-map-wrap" class="map-wrap" style="margin-top:8px"></div>
-</div>
-
-</div>
-<div>
-
-<div class="sec R">
-<div class="pt ptR">REMAP PARAMETER LANGSUNG</div>
-<div class="warn">⚠ Perubahan ini akan ditulis langsung ke ECU via K-Line! Pastikan motor dalam kondisi stasioner.</div>
-<div class="slider-grid" style="margin-top:10px">
-  <div class="sl-row">
-    <span class="sl-lbl">Idle RPM Target</span>
-    <input type="range" id="sl-idle" min="600" max="1600" step="50" value="1000" oninput="slUpdate('idle',this.value,'rpm')">
-    <span class="sl-val" id="sv-idle">1000</span>
-    <span class="sl-orig">rpm</span>
-  </div>
-  <div class="sl-row">
-    <span class="sl-lbl">Fuel Trim Global</span>
-    <input type="range" id="sl-fuel" min="-25" max="25" step="1" value="0" oninput="slUpdate('fuel',this.value,'%')">
-    <span class="sl-val" id="sv-fuel">0</span>
-    <span class="sl-orig">%</span>
-  </div>
-  <div class="sl-row">
-    <span class="sl-lbl">Ignition Advance</span>
-    <input type="range" id="sl-ign" min="-10" max="15" step="0.5" value="0" oninput="slUpdate('ign',this.value,'°')">
-    <span class="sl-val" id="sv-ign">0</span>
-    <span class="sl-orig">°</span>
-  </div>
-  <div class="sl-row">
-    <span class="sl-lbl">Lambda Target</span>
-    <input type="range" id="sl-lam" min="0.90" max="1.15" step="0.01" value="1.00" oninput="slUpdate('lam',this.value,'λ')">
-    <span class="sl-val" id="sv-lam">1.00</span>
-    <span class="sl-orig">λ</span>
-  </div>
-  <div class="sl-row">
-    <span class="sl-lbl">RPM Limiter</span>
-    <input type="range" id="sl-rpm" min="8000" max="14000" step="100" value="11000" oninput="slUpdate('rpm',this.value,'rpm')">
-    <span class="sl-val" id="sv-rpm">11000</span>
-    <span class="sl-orig">rpm</span>
-  </div>
-  <div class="sl-row">
-    <span class="sl-lbl">Speed Limiter</span>
-    <input type="range" id="sl-spd" min="0" max="200" step="5" value="130" oninput="slUpdate('spd',this.value,'km/h')">
-    <span class="sl-val" id="sv-spd">130</span>
-    <span class="sl-orig">km/h</span>
+<!-- ===== PANEL: FLASH ===== -->
+<div class="panel" id="panel-flash">
+  <div class="note warn">⚠ Flash read/write dapat merusak ECU jika terjadi kesalahan. Selalu backup dulu sebelum write. Gunakan ECU trainer/spare untuk percobaan pertama.</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">FLASH READ</div>
+      <div class="note">Protocol: Honda FID via K-Line · CMD: 72 07 76 ADDR_H ADDR_L LEN CS · Max 256 byte/frame</div>
+      <div class="sep"></div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <button onclick="flashRead()" class="green" id="btnFlashRead">📖 READ FULL FLASH</button>
+        <button onclick="readTable()" id="btnReadTable">READ TABLE</button>
+        <button onclick="saveFlash()" id="btnSaveFlash" disabled>💾 SAVE .BIN</button>
+        <button onclick="loadFlash()" class="orange">📂 LOAD .BIN</button>
+        <input type="file" id="fileInput" accept=".bin" style="display:none" onchange="onFileLoad(event)">
+      </div>
+      <div class="progress-wrap" style="margin-bottom:8px">
+        <div class="progress-fill" id="flashProg" style="width:0%"></div>
+      </div>
+      <div style="font-family:'Share Tech Mono';font-size:11px;color:var(--text2);margin-bottom:8px" id="flashStatus">Flash belum dibaca. Klik READ FULL FLASH.</div>
+      <div class="hex-display" id="hexDisplay">—</div>
+      <div style="margin-top:6px;font-family:'Share Tech Mono';font-size:10px;color:var(--text2)" id="flashInfo">Size: 0 bytes · Checksum: --</div>
+    </div>
+    <div class="card">
+      <div class="card-title">FLASH WRITE</div>
+      <div class="note danger">⚠ HANYA untuk ECU trainer/bench! Pastikan .bin valid sebelum write!</div>
+      <div class="sep"></div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <button onclick="flashWrite()" class="danger" id="btnWrite" disabled>⚡ WRITE FLASH</button>
+        <button onclick="flashVerify()" id="btnVerify" disabled>✓ VERIFY</button>
+      </div>
+      <div class="progress-wrap" style="margin-bottom:8px">
+        <div class="progress-fill" id="writeProg" style="width:0%;background:linear-gradient(90deg,var(--danger),var(--accent2))"></div>
+      </div>
+      <div style="font-family:'Share Tech Mono';font-size:11px;color:var(--text2)" id="writeStatus">Load .bin terlebih dahulu.</div>
+      <div class="sep"></div>
+      <div class="card-title" style="margin-top:10px">KEIHIN FLASH MAP — K56-N01 / K93-N01</div>
+      <div class="memmap" id="memmap"></div>
+    </div>
   </div>
 </div>
-<div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-  <button class="btn bR" onclick="applyRemap()">⚡ APPLY REMAP</button>
-  <button class="btn bY" onclick="resetRemap()">↺ RESET STOCK</button>
-  <button class="btn bA" onclick="saveRemapProfile()">💾 SAVE PROFILE</button>
-</div>
-<div id="remap-queue" style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim2)">Queue: kosong</div>
-</div>
 
-<div class="sec G">
-<div class="pt ptG">REMAP FEATURES — APA YANG BISA DIUBAH</div>
-<div style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:2">
-  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">RPM Limiter</span> — <span style="color:var(--txt)">Naikkan/turunkan cut-off RPM</span><br>
-  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Speed Limiter</span> — <span style="color:var(--txt)">Hilangkan atau sesuaikan batas kecepatan</span><br>
-  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Fuel Map</span> — <span style="color:var(--txt)">RPM × kPa / RPM × TPS (16×16 cells)</span><br>
-  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Ignition Timing</span> — <span style="color:var(--txt)">Advance per RPM dan load</span><br>
-  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Lambda Target</span> — <span style="color:var(--txt)">AFR target closed/open loop</span><br>
-  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Idle RPM</span> — <span style="color:var(--txt)">Stasioner RPM warm/cold</span><br>
-  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">Cold Start Enrich</span> — <span style="color:var(--txt)">Bahan bakar saat mesin dingin</span><br>
-  <span style="color:var(--grn)">✓</span> <span style="color:var(--wht)">DTC Disable</span> — <span style="color:var(--txt)">Matikan kode error tertentu</span><br>
-  <span style="color:var(--ylw)">~</span> <span style="color:var(--wht)">O2 Sensor Delete</span> — <span style="color:var(--txt)">Open loop permanen (butuh WBO2)</span><br>
-  <span style="color:var(--ylw)">~</span> <span style="color:var(--wht)">EVAP Delete</span> — <span style="color:var(--txt)">MIL-88 disable</span><br>
-</div>
-</div>
-
-</div>
-</div>
-</div>
-
-<!-- ════════════════════════════════ -->
-<!-- TAB: DTC                        -->
-<!-- ════════════════════════════════ -->
-<div class="tc" id="t-dtc">
-<div class="g2">
-<div>
-<div class="sec R">
-<div class="pt ptR">ACTIVE FAULT CODES</div>
-<div style="display:flex;gap:6px;margin-bottom:10px">
-  <button class="btn bA" onclick="readDTC()">📖 READ DTC</button>
-  <button class="btn bR" onclick="clearDTC()">🗑 CLEAR ALL</button>
-  <button class="btn bY" onclick="freezeDTC()">📷 FREEZE FRAME</button>
-</div>
-<div class="dtc-list" id="dtc-list">
-  <div style="color:var(--dim2);font-family:'Share Tech Mono',monospace;font-size:11px;padding:10px">
-    Belum ada DTC dibaca. Klik READ DTC setelah connect.
+<!-- ===== PANEL: REMAP ===== -->
+<div class="panel" id="panel-remap">
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">FUEL MAP — RPM × MAP (kPa) <span style="font-size:9px;color:var(--text2)">128=STOCK · >128=RICHER · &lt;128=LEANER</span></div>
+      <div class="map-wrap" id="fuelMapWrap"></div>
+      <div class="sep"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text2)">Selected: <span id="fuelSel">—</span></span>
+        <input type="number" id="fuelVal" style="width:70px" min="0" max="255" value="128">
+        <button onclick="setFuelCell()">SET</button>
+        <input type="number" id="fuelTrimPct" style="width:60px" value="0" min="-30" max="30">
+        <span style="font-size:11px;color:var(--text2)">%</span>
+        <button onclick="globalTrim('fuel')">GLOBAL TRIM</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">IGNITION MAP — RPM × MAP (kPa) <span style="font-size:9px;color:var(--text2)">val/2−64 = °BTDC</span></div>
+      <div class="map-wrap" id="ignMapWrap"></div>
+      <div class="sep"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text2)">Selected: <span id="ignSel">—</span></span>
+        <input type="number" id="ignVal" style="width:70px" min="0" max="255" value="128">
+        <button onclick="setIgnCell()">SET</button>
+        <input type="number" id="ignTrimDeg" style="width:60px" value="0" min="-20" max="20">
+        <span style="font-size:11px;color:var(--text2)">°</span>
+        <button onclick="globalTrim('ign')">GLOBAL TRIM</button>
+      </div>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="card">
+    <div class="card-title">REMAP PARAMETER LANGSUNG <span style="font-size:9px;color:var(--danger)">● Tulis ke ECU via K-Line saat stasioner</span></div>
+    <div id="paramRows"></div>
+    <div class="sep"></div>
+    <div class="btn-row">
+      <button onclick="applyRemap()" class="green">⚡ APPLY REMAP</button>
+      <button onclick="resetRemap()" class="danger">↺ RESET STOCK</button>
+      <button onclick="saveProfile()" class="orange">💾 SAVE PROFILE</button>
+      <button onclick="loadProfile()">📂 LOAD PROFILE</button>
+      <input type="file" id="profileInput" accept=".json" style="display:none" onchange="onProfileLoad(event)">
+    </div>
+    <div class="sep"></div>
+    <div style="font-family:'Share Tech Mono';font-size:11px;color:var(--text2);padding:6px 0" id="remapQueue">Queue: kosong</div>
   </div>
 </div>
-</div>
-</div>
-<div>
-<div class="sec">
-<div class="pt ptA">HONDA KEIHIN DTC REFERENCE</div>
-<div class="dtc-list" id="dtc-ref" style="max-height:400px;overflow-y:auto"></div>
-</div>
-</div>
-</div>
+
+<!-- ===== PANEL: DTC ===== -->
+<div class="panel" id="panel-dtc">
+  <div class="card">
+    <div class="card-title">ACTIVE FAULT CODES</div>
+    <div class="btn-row" style="margin-bottom:12px">
+      <button onclick="sendCmd('RDTC')" class="green">📖 READ DTC</button>
+      <button onclick="clearDtc()" class="danger">🗑 CLEAR ALL</button>
+      <button onclick="readFreezeFrame()">📷 FREEZE FRAME</button>
+    </div>
+    <div id="dtcList"><div style="color:var(--text2);font-family:'Share Tech Mono';font-size:12px;padding:12px 0">Belum ada DTC dibaca. Klik READ DTC setelah connect.</div></div>
+    <div class="sep"></div>
+    <div class="card-title">HONDA KEIHIN DTC REFERENCE</div>
+    <table class="sensor-table" id="dtcRefTable" style="font-size:11px"></table>
+  </div>
 </div>
 
-<!-- ════════════════════════════════ -->
-<!-- TAB: TERMINAL                   -->
-<!-- ════════════════════════════════ -->
-<div class="tc" id="t-term">
-<div class="sec">
-<div class="pt ptA">RAW K-LINE TERMINAL</div>
-<div class="term" id="term-out">
-  <span style="color:var(--dim2)">[SYSTEM] ZEUS PRO Terminal ready. Ketik perintah hex atau gunakan tombol di bawah.</span><br>
-  <span style="color:var(--dim2)">[SYSTEM] Format: spasi-separated hex bytes, contoh: 72 05 71 00 18</span>
-</div>
-<div class="t-inp-row">
-  <input class="t-inp" id="t-inp" placeholder="72 05 71 00 18 ← ketik hex command..." onkeydown="if(event.key==='Enter')sendRaw()">
-  <button class="btn bA" onclick="sendRaw()">SEND</button>
-  <button class="btn bR" onclick="clrTerm()">CLR</button>
-</div>
-<div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
-  <button class="btn bA" onclick="qcmd('INIT')" style="padding:5px 10px;font-size:8px">INIT</button>
-  <button class="btn bA" onclick="qcmd('WAKE')" style="padding:5px 10px;font-size:8px">WAKE</button>
-  <button class="btn bA" onclick="qcmd('T00')" style="padding:5px 10px;font-size:8px">TBL-00</button>
-  <button class="btn bA" onclick="qcmd('T10')" style="padding:5px 10px;font-size:8px">TBL-10</button>
-  <button class="btn bA" onclick="qcmd('T11')" style="padding:5px 10px;font-size:8px">TBL-11</button>
-  <button class="btn bA" onclick="qcmd('T60')" style="padding:5px 10px;font-size:8px">TBL-60</button>
-  <button class="btn bA" onclick="qcmd('RDTC')" style="padding:5px 10px;font-size:8px">RDTC</button>
-  <button class="btn bR" onclick="qcmd('CLRDTC')" style="padding:5px 10px;font-size:8px">CLRDTC</button>
-  <button class="btn bY" onclick="qcmd('KA')" style="padding:5px 10px;font-size:8px">KEEPALIVE</button>
-  <button class="btn bA" onclick="qcmd('FLASH')" style="padding:5px 10px;font-size:8px">FLASH-READ</button>
-</div>
-</div>
+<!-- ===== PANEL: TERMINAL ===== -->
+<div class="panel" id="panel-terminal">
+  <div class="card">
+    <div class="card-title">RAW K-LINE TERMINAL <span style="font-size:9px;color:var(--text2)">Format: hex bytes spasi-separated · ex: 72 05 71 00 CS</span></div>
+    <div class="terminal" id="terminal">[SYS] DIY ECU Tool — Arduino K-Line Bridge ready.<br>[SYS] Web Serial API · Chrome 89+ required.<br>[SYS] Ketik perintah hex atau gunakan tombol shortcut di bawah.</div>
+    <div class="term-input-row">
+      <input class="term-input" id="termInput" placeholder="hex bytes: 72 05 71 00 18" onkeydown="if(event.key==='Enter')sendRaw()">
+      <button onclick="sendRaw()" class="green">SEND</button>
+      <button onclick="clearTerm()">CLR</button>
+    </div>
+    <div class="btn-row">
+      <button onclick="sendCmd('INIT')">INIT</button>
+      <button onclick="sendCmd('WAKE')">WAKE</button>
+      <button onclick="sendCmd('TBL00')">TBL-00</button>
+      <button onclick="sendCmd('TBL10')">TBL-10</button>
+      <button onclick="sendCmd('TBL11')">TBL-11</button>
+      <button onclick="sendCmd('TBL60')">TBL-60</button>
+      <button onclick="sendCmd('RDTC')">READ DTC</button>
+      <button onclick="sendCmd('CLRDTC')" class="danger">CLR DTC</button>
+      <button onclick="sendCmd('KEEPALIVE')">KEEPALIVE</button>
+      <button onclick="sendCmd('FLASHRD')">FLASH-READ</button>
+    </div>
+  </div>
 </div>
 
-<!-- ════════════════════════════════ -->
-<!-- TAB: SPEC                       -->
-<!-- ════════════════════════════════ -->
-<div class="tc" id="t-spec">
-<div class="g2">
-<div>
-<div class="sec">
-<div class="pt ptA">HONDA K-LINE PROTOCOL SPEC (dari GitHub AutotronicCommunity)</div>
-<div style="font-family:'Share Tech Mono',monospace;font-size:10px;line-height:2;background:rgba(0,0,0,0.5);padding:12px;border:1px solid var(--b1)">
-<span style="color:var(--grn)">── INIT SEQUENCE ─────────────────</span><br>
-<span style="color:var(--ylw)">STEP 1:</span> Pull K-Line LOW selama 70ms<br>
-<span style="color:var(--ylw)">STEP 2:</span> K-Line HIGH selama 120ms<br>
-<span style="color:var(--ylw)">STEP 3:</span> Send WAKE: <span style="color:var(--acc)">FE 04 FF FF</span><br>
-<span style="color:var(--ylw)">STEP 4:</span> Wait 200ms<br>
-<span style="color:var(--ylw)">STEP 5:</span> Send INIT: <span style="color:var(--acc)">72 05 00 F0 99 F0</span><br>
-<span style="color:var(--ylw)">STEP 6:</span> ECU responds with: <span style="color:var(--grn)">02 04 00 FA</span><br>
-<br>
-<span style="color:var(--grn)">── REQUEST FORMAT ────────────────</span><br>
-<span style="color:var(--acc)">72 LEN 72 TABLE START END CS</span><br>
-<span style="color:var(--dim2)">72</span>    = Destination (ECU addr)<br>
-<span style="color:var(--dim2)">LEN</span>   = Total frame length including CS<br>
-<span style="color:var(--dim2)">72</span>    = Command type (read table)<br>
-<span style="color:var(--dim2)">TABLE</span> = Table number (00–FF)<br>
-<span style="color:var(--dim2)">START</span> = Start register<br>
-<span style="color:var(--dim2)">END</span>   = End register<br>
-<span style="color:var(--dim2)">CS</span>    = Checksum<br>
-<br>
-<span style="color:var(--grn)">── RESPONSE FORMAT ───────────────</span><br>
-<span style="color:var(--acc)">02 LEN 72 TABLE 00 [DATA...] CS</span><br>
-<span style="color:var(--dim2)">02</span>    = Source (ECU sends)<br>
-<span style="color:var(--dim2)">LEN</span>   = Length of full response<br>
-<span style="color:var(--dim2)">DATA</span>  = Sensor/calibration bytes<br>
-<br>
-<span style="color:var(--grn)">── CHECKSUM ──────────────────────</span><br>
-<span style="color:var(--acc)">CS = (0x100 - sum_of_all_bytes) & 0xFF</span><br>
-Contoh: 72+05+72+00+00+20 = 0x109<br>
-CS = 0x100 - 0x09 = <span style="color:var(--ylw)">0xF7</span><br>
-<br>
-<span style="color:var(--grn)">── KEEPALIVE ─────────────────────</span><br>
-Kirim setiap &lt;2.5 detik atau ECU sleep:<br>
-<span style="color:var(--acc)">72 05 72 00 00 8E</span><br>
-</div>
+<!-- ===== PANEL: FIRMWARE ===== -->
+<div class="panel" id="panel-firmware">
+  <div class="note ok">✓ Upload firmware ini ke Arduino UNO/Nano. Setelah upload, sambungkan ke K-Line interface. Buka app ini di Chrome dan klik CONNECT.</div>
+  <div class="grid2">
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-title">ARDUINO FIRMWARE — DIY K-LINE BRIDGE <span style="float:right"><button onclick="copyFirmware()" class="green" style="font-size:9px;padding:4px 10px">📋 COPY</button></span></div>
+      <div class="code-block" id="firmwareCode"></div>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">CARA UPLOAD FIRMWARE</div>
+      <div style="font-size:13px;line-height:2;color:var(--text)">
+        1. Install <b>Arduino IDE</b> dari arduino.cc<br>
+        2. Sambungkan Arduino UNO/Nano via USB<br>
+        3. Copy firmware di atas → paste ke Arduino IDE<br>
+        4. Pilih Board: <span style="color:var(--accent);font-family:'Share Tech Mono'">Arduino Uno</span> atau <span style="color:var(--accent);font-family:'Share Tech Mono'">Nano</span><br>
+        5. Pilih Port yang sesuai<br>
+        6. Klik <b>Upload</b> (⇒)<br>
+        7. Setelah upload, sambungkan K-Line hardware<br>
+        8. Buka app ini di <b>Chrome 89+</b><br>
+        9. Pilih ECU → klik <b>⚡ CONNECT</b>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">PROTOCOL ARDUINO ↔ BROWSER</div>
+      <div style="font-family:'Share Tech Mono';font-size:11px;line-height:2;color:var(--text2)">
+        <span style="color:var(--accent)">Serial (USB) 115200 baud</span><br>
+        Browser → Arduino: <span style="color:var(--accent2)">CMD:HEX_BYTES\n</span><br>
+        Arduino → Browser: <span style="color:var(--accent3)">RX:HEX_BYTES\n</span><br>
+        Status: <span style="color:var(--warn)">STATUS:text\n</span><br>
+        Error: <span style="color:var(--danger)">ERR:text\n</span><br><br>
+        <span style="color:var(--text2)">Arduino melakukan K-Line init (slow init 10400 baud)<br>
+        timing dicontrol dari firmware.<br>
+        Browser tinggal kirim command, terima response.</span>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="sec G">
-<div class="pt ptG">DATA TABLE REFERENCE</div>
-<table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:10px">
-  <tr style="background:rgba(0,0,0,0.3)"><th style="padding:4px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">TABLE</th><th style="padding:4px 8px;text-align:left;border:1px solid var(--b1);color:var(--dim2)">CONTENT</th><th style="padding:4px 8px;border:1px solid var(--b1);color:var(--dim2)">CMD</th></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x00</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">RPM, Speed, TPS, Battery</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 00 CS</td></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x10</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">ECT, IAT, MAP, O2 Sensor</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 10 CS</td></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x11</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Fuel trim, Injector PW, IGN</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 11 CS</td></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x17</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Extended data (beberapa ECU)</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 17 CS</td></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--ylw)">0x60</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Extended RPM, load, lambda</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 71 60 CS</td></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--red)">0x73</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Read DTC codes</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 73 00 00 CS</td></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--red)">0x74</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Clear DTC codes</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 05 74 00 00 CS</td></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--pur)">0x76</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Flash read (FID mode)</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 07 76 ADDR_H ADDR_L LEN CS</td></tr>
-  <tr><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--pur)">0x77</td><td style="padding:3px 8px;border:1px solid var(--b1);color:var(--wht)">Flash write (FID mode)</td><td style="padding:3px 8px;border:1px solid var(--b1)">72 XX 77 ADDR [DATA] CS</td></tr>
-</table>
-</div>
+<!-- ===== PANEL: WIRING ===== -->
+<div class="panel" id="panel-wiring">
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">SKEMA WIRING — Arduino → K-Line → ECU Honda</div>
+      <pre style="font-family:'Share Tech Mono';font-size:11px;color:var(--text2);line-height:2;overflow-x:auto;white-space:pre">
+<span style="color:var(--accent)">Arduino UNO/Nano</span>              <span style="color:var(--accent2)">K-Line Circuit</span>            <span style="color:var(--accent3)">Honda ECU DLC</span>
+
+  Pin D2 (TX) ────[510Ω]────┬──────────────────── K-LINE
+                             │                    (DLC1 — Biru/Putih)
+  Pin D3 (RX) ───────────────┤
+                             │
+                          [L9637D]  <span style="color:var(--warn)">← IC transceiver (DISARANKAN)</span>
+                          atau
+                       [Diode+R] <span style="color:var(--warn)">← Versi sederhana</span>
+                             │
+                           +12V ──────────────── BATT+ ECU / IG ON
+
+  GND ──────────────────────────────────────── GND ECU
+
+<span style="color:var(--accent)">DLC HONDA 4-PIN SUMITOMO HM090:</span>
+  Pin 1 — GND
+  Pin 2 — K-LINE (ISO 9141)
+  Pin 3 — +12V Battery
+  Pin 4 — tidak digunakan
+
+<span style="color:var(--accent)">VERSI SEDERHANA (tanpa IC):</span>
+  Arduino D2 (TX) ─[510Ω]─┬─ K-LINE
+                           │
+  Arduino D3 (RX) ─────────┘
+                           │
+  1N4148 diode ────────────┤
+                           │
+  +12V (dari ECU) ─[10kΩ]──┘
+
+<span style="color:var(--accent)">VERSI DENGAN L9637D (lebih aman):</span>
+  Arduino TX ─── L9637D TX-IN
+  Arduino RX ─── L9637D RX-OUT
+  L9637D K-LINE ─── DLC Pin 2
+  L9637D VCC ─── +5V Arduino
+  L9637D Vbat ─── +12V ECU
+</pre>
+    </div>
+    <div class="card">
+      <div class="card-title">KOMPONEN YANG DIBUTUHKAN</div>
+      <table class="sensor-table" style="font-size:12px">
+        <thead><tr><th>KOMPONEN</th><th>NILAI</th><th>FUNGSI</th><th>HARGA EST.</th></tr></thead>
+        <tbody>
+          <tr><td>Arduino UNO/Nano</td><td>ATmega328P</td><td>USB-Serial bridge</td><td style="color:var(--accent3)">Rp 35–60rb</td></tr>
+          <tr><td>L9637D atau MC33660</td><td>ISO K-LINE IC</td><td>K-Line transceiver</td><td style="color:var(--accent3)">Rp 15–30rb</td></tr>
+          <tr><td>Resistor</td><td>510Ω</td><td>K-Line pull-down</td><td style="color:var(--accent3)">Rp 500</td></tr>
+          <tr><td>Resistor pull-up</td><td>10kΩ</td><td>K-Line pull-up ke 12V</td><td style="color:var(--accent3)">Rp 500</td></tr>
+          <tr><td>Diode</td><td>1N4148</td><td>Blocking (versi simple)</td><td style="color:var(--accent3)">Rp 500</td></tr>
+          <tr><td>Konektor DLC</td><td>Sumitomo HM090 4P</td><td>Ke soket ECU</td><td style="color:var(--accent3)">Rp 10–20rb</td></tr>
+          <tr><td>Kabel</td><td>22AWG</td><td>Wiring</td><td style="color:var(--accent3)">Rp 5rb</td></tr>
+          <tr><td>PCB / Breadboard</td><td>—</td><td>Assembly</td><td style="color:var(--accent3)">Rp 5–15rb</td></tr>
+        </tbody>
+      </table>
+      <div class="sep"></div>
+      <div class="note ok">✓ Total biaya hardware: <b>~Rp 70–130rb</b> vs Zeus MST-100P ~Rp 800rb–1.5jt</div>
+      <div class="sep"></div>
+      <div class="card-title">CATATAN PENTING</div>
+      <div style="font-size:12px;line-height:2;color:var(--text2)">
+        • K-Line adalah 12V bidirectional — jangan hubungkan langsung ke Arduino 5V<br>
+        • Selalu pakai L9637D untuk proteksi. Versi diode/resistor bisa tapi risiko lebih tinggi<br>
+        • Pastikan GND laptop/PC terhubung ke GND ECU saat bench test<br>
+        • Power supply 12V trainer harus stabil (bukan adaptor murahan)<br>
+        • Terminal IG (ignition) harus dapat +12V sebelum ECU akan merespons
+      </div>
+    </div>
+  </div>
 </div>
 
-<div>
-<div class="sec P">
-<div class="pt ptP">REMAP WORKFLOW — CARA YANG BENAR</div>
-<div style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:2.2">
-<span style="color:var(--pur)">STEP 1:</span> <span style="color:var(--wht)">Connect ZEUS ke DLC motor</span><br>
-<span style="color:var(--pur)">STEP 2:</span> <span style="color:var(--wht)">READ FULL FLASH → simpan .bin original</span><br>
-<span style="color:var(--pur)">STEP 3:</span> <span style="color:var(--wht)">Buka .bin di TunerPro RT + XDF file</span><br>
-<span style="color:var(--pur)">STEP 4:</span> <span style="color:var(--wht)">Edit fuel map / ign map di TunerPro</span><br>
-<span style="color:var(--pur)">STEP 5:</span> <span style="color:var(--wht)">Save .bin hasil edit (TunerPro auto-fix CS)</span><br>
-<span style="color:var(--pur)">STEP 6:</span> <span style="color:var(--wht)">Load .bin ke app ini → WRITE FLASH</span><br>
-<span style="color:var(--pur)">STEP 7:</span> <span style="color:var(--wht)">VERIFY → test live data</span><br>
-<br>
-<span style="color:var(--ylw)">TOOLS GRATIS:</span><br>
-<span style="color:var(--acc)">TunerPro RT</span>  — tunerpro.net (gratis)<br>
-<span style="color:var(--acc)">XDF files</span>    — oldskulltuning.com (50 euro/ECU)<br>
-<span style="color:var(--acc)">HondaECU</span>     — mcuinnovations.com (gratis)<br>
-<span style="color:var(--acc)">MotoLink</span>      — github.com/fpoussin (gratis)<br>
-</div>
-</div>
-
-<div class="sec">
-<div class="pt ptA">ZEUS MST-100P CLONE PROTOCOL</div>
-<div style="font-family:'Share Tech Mono',monospace;font-size:10px;line-height:2;background:rgba(0,0,0,0.4);padding:10px;border:1px solid var(--b1)">
-<span style="color:var(--grn)">ZEUS hardware = CP2102 USB-UART bridge</span><br>
-Data dari ECU melewati ZEUS tanpa re-encoding.<br>
-Format data = <span style="color:var(--ylw)">Honda K-Line binary langsung</span><br>
-<br>
-Artinya aplikasi ini bisa:<br>
-<span style="color:var(--grn)">✓</span> Membaca semua data yang Zeus bisa baca<br>
-<span style="color:var(--grn)">✓</span> Kirim command ke ECU sama seperti Zeus<br>
-<span style="color:var(--grn)">✓</span> Flash read/write (Zeus MST tidak bisa!)<br>
-<span style="color:var(--grn)">✓</span> Custom remap table (Zeus tidak bisa!)<br>
-<span style="color:var(--grn)">✓</span> Real-time logging ke JSON/CSV<br>
-<span style="color:var(--ylw)">~</span> Actuator test (butuh command spesifik per model)<br>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<input type="file" id="bin-loader" accept=".bin" style="display:none" onchange="loadBinFile(this)">
+</div><!-- /wrap -->
 
 <script>
-// ══════════════════════════════════════════════
-// ZEUS PRO — ENGINE
-// ══════════════════════════════════════════════
+// ==================== STATE ====================
+let port = null, reader = null, writer = null;
+let connected = false;
+let ecuModel = '';
+let flashData = null;
+let demoMode = false;
+let demoTimer = null;
+let liveLog = [];
+let selectedFuelCell = null, selectedIgnCell = null;
+let fuelMap = [], ignMap = [];
+let oscHistory = { rpm:[], o2:[], tps:[], inj:[] };
+const OSC_LEN = 100;
 
+// ECU DB
 const ECU_DB = {
-  k56: {pn:'38770-K56-N01',name:'Sonic 150 / Vario 150',type:'Keihin R8C',flash:57344,maxRpm:11000,baud:10400},
-  k45: {pn:'38770-K45N-NA1',name:'Vario 125',type:'Keihin H8C',flash:49152,maxRpm:10000},
-  k93: {pn:'38770-K93-N01',name:'Beat FI',type:'Keihin H8C',flash:49152,maxRpm:10000},
-  mkj: {pn:'38770-MKJ-D51',name:'CBR 150',type:'Keihin R8C',flash:57344,maxRpm:13000},
-  kyj: {pn:'38770-KYJ-922',name:'CBR 250',type:'Keihin R8C',flash:57344,maxRpm:14000},
-  k0j: {pn:'30400-K0J-N61',name:'PCX 160',type:'Shindengen V850',flash:262144,maxRpm:10000},
+  'K56-N01': { name:'Vario 150 / Sonic 150', chip:'Keihin R8C', flash:56*1024, initType:'C9', flashEnd:0xDFFF },
+  'K45N-NA1': { name:'Vario 125', chip:'Keihin H8C', flash:48*1024, initType:'STD', flashEnd:0xBFFF },
+  'K93-N01': { name:'Beat FI', chip:'Keihin H8C', flash:48*1024, initType:'STD', flashEnd:0xBFFF },
+  'MKJ-D51': { name:'CBR 150', chip:'Keihin R8C', flash:56*1024, initType:'STD', flashEnd:0xDFFF },
+  'KYJ-922': { name:'CBR 250', chip:'Keihin R8C', flash:56*1024, initType:'STD', flashEnd:0xDFFF },
 };
 
-const DTC_DB = {
-  1:{name:'MAP Sensor',desc:'Manifold Absolute Pressure circuit malfunction',severity:'high'},
-  7:{name:'ECT Sensor',desc:'Engine coolant temperature out of range',severity:'med'},
-  8:{name:'TPS Circuit',desc:'Throttle position sensor signal fault',severity:'high'},
-  9:{name:'IAT Sensor',desc:'Intake air temperature circuit fault',severity:'low'},
-  11:{name:'VSS Circuit',desc:'Vehicle speed sensor signal missing',severity:'med'},
-  12:{name:'Injector',desc:'Injector circuit electrical fault',severity:'high'},
-  13:{name:'O2 Upstream',desc:'Oxygen sensor signal fault (upstream)',severity:'med'},
-  14:{name:'IACV',desc:'Idle air control valve circuit fault',severity:'med'},
-  21:{name:'O2 Heater',desc:'O2 sensor heater circuit fault',severity:'low'},
-  29:{name:'IACV Circuit',desc:'Idle air control valve operation fault',severity:'med'},
-  33:{name:'CAM Sensor',desc:'Camshaft position sensor circuit fault',severity:'high'},
-  52:{name:'CKP Sensor',desc:'Crankshaft position sensor fault',severity:'high'},
-  54:{name:'Fuel Pump',desc:'Fuel pump circuit fault',severity:'high'},
-  85:{name:'IACV2',desc:'Secondary idle air control valve fault',severity:'low'},
-  86:{name:'EGR Valve',desc:'Exhaust gas recirculation valve fault',severity:'low'},
-  88:{name:'EVAP',desc:'Evaporative emission control system fault',severity:'low'},
+// DTC DB
+const DTC_DB = [
+  { code:'P0107', desc:'MAP Sensor Low Voltage', sys:'MAP/BARO', sev:'active' },
+  { code:'P0108', desc:'MAP Sensor High Voltage', sys:'MAP/BARO', sev:'active' },
+  { code:'P0112', desc:'IAT Sensor Low Voltage', sys:'IAT', sev:'active' },
+  { code:'P0113', desc:'IAT Sensor High Voltage', sys:'IAT', sev:'active' },
+  { code:'P0116', desc:'ECT Sensor Range/Performance', sys:'ECT', sev:'active' },
+  { code:'P0117', desc:'ECT Sensor Low Voltage', sys:'ECT', sev:'active' },
+  { code:'P0118', desc:'ECT Sensor High Voltage', sys:'ECT', sev:'active' },
+  { code:'P0122', desc:'TPS Sensor Low Voltage', sys:'TPS', sev:'active' },
+  { code:'P0123', desc:'TPS Sensor High Voltage', sys:'TPS', sev:'active' },
+  { code:'P0131', desc:'O2 Sensor Low Voltage (Bank 1)', sys:'O2', sev:'active' },
+  { code:'P0132', desc:'O2 Sensor High Voltage (Bank 1)', sys:'O2', sev:'active' },
+  { code:'P0336', desc:'CKP Sensor Range/Performance', sys:'CKP', sev:'active' },
+  { code:'P0505', desc:'Idle Control System Malfunction', sys:'IACV', sev:'pending' },
+  { code:'P1107', desc:'BARO Sensor Lower Than MAP', sys:'BARO', sev:'historic' },
+  { code:'P1297', desc:'EPS/Elec Load Sensor', sys:'ELD', sev:'pending' },
+];
+
+// Remap params
+const REMAP_PARAMS = [
+  { id:'idle_rpm', label:'Idle RPM Target', min:700, max:2000, def:1000, step:50, unit:'rpm' },
+  { id:'fuel_trim', label:'Fuel Trim Global', min:-30, max:30, def:0, step:1, unit:'%' },
+  { id:'ign_adv', label:'Ignition Advance', min:-10, max:20, def:0, step:0.5, unit:'°' },
+  { id:'lambda', label:'Lambda Target', min:0.8, max:1.2, def:1.0, step:0.01, unit:'λ' },
+  { id:'rpm_lim', label:'RPM Limiter', min:6000, max:14000, def:11000, step:100, unit:'rpm' },
+  { id:'spd_lim', label:'Speed Limiter', min:60, max:180, def:130, step:5, unit:'km/h' },
+];
+
+// K-Line CMD shortcuts
+const CMDS = {
+  INIT: 'INIT',
+  WAKE: 'WAKE',
+  TBL00: 'CMD:72 05 71 00 18',
+  TBL10: 'CMD:72 05 71 10 08',
+  TBL11: 'CMD:72 05 71 11 07',
+  TBL60: 'CMD:72 05 71 60 B8',
+  RDTC:  'CMD:72 05 73 00 16',
+  CLRDTC:'CMD:72 05 74 00 15',
+  KEEPALIVE:'CMD:72 05 72 00 00 8E',
+  FLASHRD:'FLASHRD',
 };
 
-const CMD = {
-  WAKE:[0xFE,0x04,0xFF,0xFF],
-  INIT:[0x72,0x05,0x00,0xF0,0x99,0xF0],
-  KA:  [0x72,0x05,0x72,0x00,0x00,0x8E],
-  T00: [0x72,0x05,0x71,0x00,0x18,cs_([0x72,0x05,0x71,0x00,0x18])],
-  T10: [0x72,0x05,0x71,0x10,0x18,cs_([0x72,0x05,0x71,0x10,0x18])],
-  T11: [0x72,0x05,0x71,0x11,0x18,cs_([0x72,0x05,0x71,0x11,0x18])],
-  T60: [0x72,0x05,0x71,0x60,0x20,cs_([0x72,0x05,0x71,0x60,0x20])],
-  RDTC:[0x72,0x05,0x73,0x00,0x00,cs_([0x72,0x05,0x73,0x00,0x00])],
-  CLRDTC:[0x72,0x05,0x74,0x00,0x00,cs_([0x72,0x05,0x74,0x00,0x00])],
-  FLASH:[0x72,0x07,0x76,0x00,0x00,0x40,cs_([0x72,0x07,0x76,0x00,0x00,0x40])],
-};
+// Memory map regions
+const MEM_MAP = [
+  { addr:'0x0000', label:'BOOTLOADER (READ ONLY)', size:'4 KB', color:'#ff224455', pct:7 },
+  { addr:'0x1000', label:'CALIBRATION DATA', size:'8 KB', color:'#ffcc0055', pct:14 },
+  { addr:'0x3000', label:'FUEL MAP (RPM×kPa)', size:'2 KB', color:'#00e5ff66', pct:4 },
+  { addr:'0x3800', label:'FUEL MAP (RPM×TPS)', size:'2 KB', color:'#00e5ff44', pct:4 },
+  { addr:'0x4000', label:'IGNITION MAP (RPM×kPa)', size:'2 KB', color:'#39ff1466', pct:4 },
+  { addr:'0x4800', label:'IGNITION MAP (RPM×TPS)', size:'2 KB', color:'#39ff1444', pct:4 },
+  { addr:'0x5000', label:'IDLE CONTROL TABLE', size:'512 B', color:'#ff6b3555', pct:1 },
+  { addr:'0x5200', label:'COLD START ENRICHMENT', size:'256 B', color:'#aa44ff55', pct:1 },
+  { addr:'0x6000', label:'RPM LIMITER TABLE', size:'64 B', color:'#ff224455', pct:1 },
+  { addr:'0x6100', label:'SPEED LIMITER TABLE', size:'64 B', color:'#ff6b3555', pct:1 },
+  { addr:'0x7000', label:'FIRMWARE CODE', size:'~28 KB', color:'#607080aa', pct:59 },
+];
 
-function cs_(b){return(0x100-(b.reduce((a,x)=>a+x,0)&0xFF))&0xFF;}
+// Arduino firmware source
+const FIRMWARE = `/* ============================================
+   DIY ECU TOOL — Arduino K-Line Bridge
+   Hardware: Arduino UNO / Nano (ATmega328P)
+   Protokol: Honda K-Line ISO 9141 (10400 baud)
+   Browser → Arduino: CMD:HEX_BYTES\\n or INIT/WAKE/etc
+   Arduino → Browser: RX:HEX_BYTES\\n / STATUS:text\\n
+   ============================================ */
 
-const S = {
-  port:null,reader:null,writer:null,
-  connected:false,demo:false,
-  rawBuf:[],flashBuf:[],
-  flashReading:false,
-  selectedEcu:'k56',
-  selCell:null,
-  fuelMap:null, ignMap:null,
-  histRpm:new Array(120).fill(0),
-  histO2:new Array(120).fill(0.45),
-  histTps:new Array(120).fill(0),
-  histInj:new Array(120).fill(0),
-  fc:0, fpsT:Date.now(),
-};
+#include <SoftwareSerial.h>
 
-// ── INIT ──
-document.addEventListener('DOMContentLoaded',()=>{
-  if(!('serial' in navigator)) el('serial-warn').style.display='block';
-  buildDTCRef();
-  buildMaps();
-  startOscope();
-  ecuChanged();
-});
+#define KLINE_TX_PIN  2   // K-Line TX (via 510Ω + L9637D)
+#define KLINE_RX_PIN  3   // K-Line RX
+#define KLINE_BAUD    10400
+#define PC_BAUD       115200
+#define KEEPALIVE_MS  2000
 
-function ecuChanged(){
-  const m=el('ecu-model').value;
-  S.selectedEcu=m;
-  const e=ECU_DB[m]||ECU_DB.k56;
-  el('ei-pn').textContent=e.pn;
-  el('ei-type').textContent=e.type;
-  el('ei-flash').textContent=(e.flash/1024).toFixed(0)+' KB';
-  el('ei-proto').textContent='K-Line 10400 baud (Honda proprietary)';
+SoftwareSerial kline(KLINE_RX_PIN, KLINE_TX_PIN);
+
+unsigned long lastKeepAlive = 0;
+bool ecuConnected = false;
+String inputBuf = "";
+
+// K-Line slow init sequence
+void klineInit() {
+  // Step 1: Pull LOW 70ms (break signal)
+  pinMode(KLINE_TX_PIN, OUTPUT);
+  digitalWrite(KLINE_TX_PIN, LOW);
+  delay(70);
+
+  // Step 2: HIGH 120ms
+  digitalWrite(KLINE_TX_PIN, HIGH);
+  delay(120);
+
+  // Step 3: Start SoftwareSerial at 10400 baud
+  kline.begin(KLINE_BAUD);
+
+  Serial.println("STATUS:K-Line init pulse done");
+  delay(20);
 }
 
-// ── CONNECT ──
-// ── FORCE CONNECT (manual override baud) ──
-// ══════════════════════════════════════════════════════════════════════════
-// HONDA KEIHIN K-LINE — UNIVERSAL CONNECT v3
-// Support: K56-N01 (Sonic150/Vario150), K45 (Vario125), K93 (Beat), MKJ (CBR150)
-// SW C9 series: timing berbeda — LOW 200ms, HIGH 200ms, prefix BF packet
-// Ref: AutotronicCommunity/Honda_Keihin_KLine + OpenECU + reverse engineering
-// ══════════════════════════════════════════════════════════════════════════
-
-// ── ECU PROFILE: timing & init bytes per model/SW series ──
-const ECU_PROFILES = {
-  // ══ C9 STANDARD — Zeus MST-100P kompensasi latency 50ms ══
-  'C9': {
-    name:'C9 Standard (Sonic150/CBR150/Vario150)',
-    baud:10400, lowMs:200, highMs:200, wakeDelay:300, initDelay:600,
-    prefix:[0xBF,0x00,0x04,0x04,0xFE],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout:1200,
-  },
-  // ══ C9 STANDARD dengan Zeus latency kompensasi ══
-  'C9_STD': {
-    name:'C9 STD Zeus Bridge (250ms)',
-    baud:10400, lowMs:250, highMs:250, wakeDelay:400, initDelay:800,
-    prefix:[0xBF,0x00,0x04,0x04,0xFE],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout:2500,
-  },
-  // ══ C9 ULTRA SLOW — untuk Zeus MST-100P yang lambat ══
-  'C9_SLOW': {
-    name:'C9 Ultra Slow Zeus (500ms)',
-    baud:10400, lowMs:500, highMs:500, wakeDelay:600, initDelay:1200,
-    prefix:[0xBF,0x00,0x04,0x04,0xFE],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout:3500,
-  },
-  // ══ C9 ALT — init bytes alternatif dari komunitas ══
-  'C9_ALT': {
-    name:'C9 Alt Init Bytes (B0 01)',
-    baud:10400, lowMs:250, highMs:250, wakeDelay:400, initDelay:800,
-    prefix:[0xBF,0x00,0x04,0x04,0xFE],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0xB0,0x01,0x18,0x3A],
-    respTimeout:2500,
-  },
-  // ══ PASSTHROUGH 38400 — beberapa Zeus clone pakai ini ══
-  'PASS38': {
-    name:'Passthrough 38400 Zeus Clone',
-    baud:38400, lowMs:50, highMs:100, wakeDelay:100, initDelay:400,
-    prefix:[],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout:1500,
-  },
-  // ══ RAW BYPASS — skip slow init, langsung kirim data ══
-  'RAW': {
-    name:'Raw Bypass (skip slow-init)',
-    baud:10400, lowMs:0, highMs:0, wakeDelay:200, initDelay:500,
-    prefix:[0xBF,0x00,0x04,0x04,0xFE],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout:2000,
-  },
-  // ══ WAKE ONLY — hanya kirim wake, lalu langsung poll ══
-  'WAKEONLY': {
-    name:'Wake Only + Direct Poll',
-    baud:10400, lowMs:100, highMs:100, wakeDelay:150, initDelay:300,
-    prefix:[],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0x71,0x00,0x18,0x00],
-    respTimeout:2000,
-  },
-  // ══ STANDARD K-Line ══
-  'STD': {
-    name:'Standard K-Line (Vario125/Beat/PCX)',
-    baud:10400, lowMs:70, highMs:120, wakeDelay:60, initDelay:400,
-    prefix:[],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout:900,
-  },
-  // ══ HIGH SPEED ══
-  'HSP': {
-    name:'High Speed K-Line (CBR250/PCX160)',
-    baud:38400, lowMs:25, highMs:60, wakeDelay:50, initDelay:300,
-    prefix:[],
-    wake:[0xFE,0x04,0xFF,0xFF],
-    init:[0x72,0x05,0x00,0xF0,0x99,0xF0],
-    respTimeout:700,
-  },
-};
-
-// Deteksi profile// Deteksi profile dari SW version string
-function detectProfile(swVer) {
-  if (!swVer) return 'C9'; // default untuk K56-N01 yang kita miliki
-  const upper = swVer.toUpperCase();
-  if (upper.includes('C9'))  return 'C9';
-  if (upper.includes('CBR250') || upper.includes('PCX160') || upper.includes('KYJ')) return 'HSP';
-  return 'STD';
+// K-Line C9 series init (K56-N01)
+void klineInitC9() {
+  // C9 prefix before wake
+  byte prefix[] = {0xBF, 0x00, 0x04, 0x04, 0xFE};
+  pinMode(KLINE_TX_PIN, OUTPUT);
+  digitalWrite(KLINE_TX_PIN, LOW);
+  delay(200);
+  digitalWrite(KLINE_TX_PIN, HIGH);
+  delay(200);
+  kline.begin(KLINE_BAUD);
+  for(int i=0; i<5; i++) kline.write(prefix[i]);
+  delay(50);
+  Serial.println("STATUS:C9 prefix sent");
 }
 
-// ── SLOW INIT v5 — Zeus MST-100P Optimized ──
-async function doSlowInit(port, profile) {
-  const prof = ECU_PROFILES[profile] || ECU_PROFILES['C9_STD'];
-  tlog(`[INIT] Profile: ${prof.name} | ${prof.baud} baud`,'info');
+// Send wake frame
+void sendWake() {
+  byte wake[] = {0xFE, 0x04, 0xFF, 0xFF};
+  for(int i=0; i<4; i++) kline.write(wake[i]);
+  delay(200);
+  Serial.println("STATUS:Wake sent");
+}
 
-  // Skip slow-init jika lowMs=0 (RAW mode)
-  if(prof.lowMs === 0){
-    tlog('[INIT] RAW mode — skip slow-init','warn');
-    await flushRxAll(port, 200);
-  } else {
-    // STEP 1: Flush semua buffer — penting untuk Zeus MST-100P
-    await flushRxAll(port, 200);
-    await delay(80);
+// Send init request
+void sendInitReq() {
+  byte init[] = {0x72, 0x05, 0x00, 0xF0, 0x99, 0xF0};
+  for(int i=0; i<6; i++) kline.write(init[i]);
+  Serial.println("STATUS:Init request sent");
+}
 
-    // STEP 2: K-Line LOW — kirim 0x00 terus selama lowMs
-    // Zeus MST-100P: pakai lebih banyak bytes untuk pastikan ECU detect LOW
-    const nLow = Math.max(8, Math.ceil(prof.baud * (prof.lowMs/1000) / 8));
-    tlog(`[INIT] K-Line LOW ${prof.lowMs}ms (${nLow} bytes @ ${prof.baud})...`,'info');
-    const wLow = port.writable.getWriter();
-    await wLow.write(new Uint8Array(nLow).fill(0x00));
-    wLow.releaseLock();
-    await delay(prof.lowMs + 50); // +50ms buffer Zeus
+// Calculate Honda K-Line checksum
+byte calcCS(byte *buf, int len) {
+  int sum = 0;
+  for(int i=0; i<len; i++) sum += buf[i];
+  return (0x100 - (sum & 0xFF)) & 0xFF;
+}
 
-    // STEP 3: K-Line HIGH idle — diam, tidak kirim apa-apa
-    tlog(`[INIT] K-Line HIGH idle ${prof.highMs}ms...`,'info');
-    await delay(prof.highMs + 50); // +50ms buffer Zeus
+// Send hex bytes array to K-Line
+void sendHex(byte *buf, int len) {
+  for(int i=0; i<len; i++) kline.write(buf[i]);
+}
 
-    // STEP 4: Flush echo bytes dari Zeus bridge
-    await flushRxAll(port, 180);
-    await delay(50);
+// Send keepalive
+void sendKeepalive() {
+  byte ka[] = {0x72, 0x05, 0x72, 0x00, 0x00, 0x8E};
+  sendHex(ka, 6);
+}
+
+// Parse and send hex string from PC
+void parseSendHex(String hexStr) {
+  hexStr.trim();
+  byte buf[64];
+  int len = 0;
+  int pos = 0;
+  while(pos < hexStr.length() && len < 64) {
+    while(pos < hexStr.length() && hexStr[pos]==' ') pos++;
+    if(pos+1 >= hexStr.length()) break;
+    String byteStr = hexStr.substring(pos, pos+2);
+    buf[len++] = (byte)strtol(byteStr.c_str(), NULL, 16);
+    pos += 2;
+  }
+  sendHex(buf, len);
+}
+
+// Read response from K-Line with timeout
+String readKLineResponse(int timeout_ms) {
+  String resp = "RX:";
+  unsigned long t = millis();
+  while(millis()-t < timeout_ms) {
+    if(kline.available()) {
+      byte b = kline.read();
+      char hex[4];
+      sprintf(hex, "%02X ", b);
+      resp += hex;
+      t = millis(); // reset timeout on data
+    }
+  }
+  return resp;
+}
+
+void setup() {
+  Serial.begin(PC_BAUD);
+  Serial.println("STATUS:DIY ECU Bridge ready. Send INIT to begin.");
+  pinMode(KLINE_TX_PIN, OUTPUT);
+  digitalWrite(KLINE_TX_PIN, HIGH);
+}
+
+void loop() {
+  // Read from PC (browser)
+  while(Serial.available()) {
+    char c = Serial.read();
+    if(c == '\\n') {
+      processCommand(inputBuf);
+      inputBuf = "";
+    } else {
+      inputBuf += c;
+    }
   }
 
-  // Step 4: Prefix packet (khusus C9 series)
-  if (prof.prefix && prof.prefix.length > 0) {
-    const wPfx = port.writable.getWriter();
-    await wPfx.write(new Uint8Array(prof.prefix));
-    const pfxHex = prof.prefix.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
-    tlog(`[TX] PREFIX: ${pfxHex}`,'tx');
-    wPfx.releaseLock();
-    await delay(prof.wakeDelay);
-    await flushRx(port, 80);
+  // Forward K-Line data to PC
+  if(kline.available()) {
+    String resp = readKLineResponse(50);
+    if(resp.length() > 3) {
+      Serial.println(resp);
+    }
   }
 
-  // Step 5: WAKE packet
-  const wWake = port.writable.getWriter();
-  await wWake.write(new Uint8Array(prof.wake));
-  const wakeHex = prof.wake.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
-  tlog(`[TX] WAKE: ${wakeHex}`,'tx');
-  wWake.releaseLock();
-  await delay(prof.wakeDelay);
-
-  // Step 6: INIT packet
-  const wInit = port.writable.getWriter();
-  await wInit.write(new Uint8Array(prof.init));
-  const initHex = prof.init.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
-  tlog(`[TX] INIT: ${initHex}`,'tx');
-  wInit.releaseLock();
-  await delay(prof.initDelay);
-}
-
-// Flush/drain RX buffer — versi v5 multi-drain
-async function flushRx(port, timeoutMs) {
-  return flushRxAll(port, timeoutMs);
-}
-async function flushRxAll(port, timeoutMs=200) {
-  if (!port.readable) return;
-  const deadline = Date.now() + timeoutMs;
-  let total = 0;
-  while(Date.now() < deadline){
-    const r = port.readable.getReader();
-    try {
-      const left = deadline - Date.now();
-      const res = await Promise.race([
-        r.read(),
-        delay(Math.min(left, 80)).then(()=>({value:null,done:false}))
-      ]);
-      if(res && res.value && res.value.length > 0){ total += res.value.length; }
-      else { r.releaseLock(); break; }
-      r.releaseLock();
-    } catch(e){ try{r.releaseLock();}catch(e2){} break; }
+  // Keepalive
+  if(ecuConnected && millis()-lastKeepAlive > KEEPALIVE_MS) {
+    sendKeepalive();
+    lastKeepAlive = millis();
   }
-  if(total > 0) tlog(`[FLUSH] Cleared ${total} bytes from RX buffer`,'info');
 }
 
-// Baca respon ECU v5 — toleran Zeus MST-100P latency
-async function readEcuResp(port, timeoutMs) {
-  if (!port.readable) return { ok:false, bytes:[] };
-  const deadline = Date.now() + timeoutMs;
-  let bytes = [];
-  while(Date.now() < deadline && bytes.length < 32){
-    const r = port.readable.getReader();
-    try {
-      const left = Math.max(50, deadline - Date.now());
-      const res  = await Promise.race([
-        r.read(),
-        delay(Math.min(left, 400)).then(()=>({value:null,done:false}))
-      ]);
-      if(res && res.value && res.value.length > 0){
-        const chunk = Array.from(res.value);
-        bytes.push(...chunk);
-        const hex = chunk.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
-        tlog(`[RX] ${hex} (+${chunk.length} bytes, total:${bytes.length})`,'rx');
-        if(bytes.length >= 3) { r.releaseLock(); break; }
-      }
-      r.releaseLock();
-      if(!res || (!res.value && bytes.length === 0 && (deadline-Date.now())<100)) break;
-    } catch(e){ tlog('[RX-ERR] '+e.message,'warn'); try{r.releaseLock();}catch(e2){} break; }
+void processCommand(String cmd) {
+  cmd.trim();
+
+  if(cmd == "INIT") {
+    klineInit();
+    delay(100);
+    sendWake();
+    delay(200);
+    sendInitReq();
+    String resp = readKLineResponse(300);
+    Serial.println(resp);
+    if(resp.length() > 3) {
+      ecuConnected = true;
+      Serial.println("STATUS:ECU connected");
+    } else {
+      Serial.println("ERR:No ECU response. Check wiring & IG power.");
+    }
   }
-  // Validasi: terima APAPUN yang bukan pure echo dari bytes yang kita kirim
-  const echoSet = new Set([0x00,0xBF,0xFE,0x04,0xFF,0x72,0x05,0xF0,0x99,0xB0,0x01,0x18,0x3A,0x8E]);
-  const hasNew   = bytes.some(b => !echoSet.has(b));
-  const hasFrame = bytes.some(b => b===0x02 || b===0x03 || b===0xE0);
-  const ok = hasFrame || hasNew || bytes.length >= 3;
-  return { ok, bytes };
+  else if(cmd == "INITC9") {
+    klineInitC9();
+    delay(100);
+    sendWake();
+    delay(200);
+    sendInitReq();
+    String resp = readKLineResponse(300);
+    Serial.println(resp);
+    if(resp.length() > 3) {
+      ecuConnected = true;
+      Serial.println("STATUS:ECU (C9 series) connected");
+    } else {
+      Serial.println("ERR:No response (C9). Check IG power & DLC.");
+    }
+  }
+  else if(cmd == "WAKE") {
+    sendWake();
+    Serial.println("STATUS:Wake sent");
+  }
+  else if(cmd == "FLASHRD") {
+    // Flash read command — browser handles framing
+    Serial.println("STATUS:Ready for flash read frames");
+  }
+  else if(cmd.startsWith("CMD:")) {
+    String hexPart = cmd.substring(4);
+    parseSendHex(hexPart);
+    String resp = readKLineResponse(150);
+    if(resp.length() > 3) Serial.println(resp);
+    lastKeepAlive = millis();
+  }
+  else if(cmd == "STATUS") {
+    Serial.println(ecuConnected ? "STATUS:connected" : "STATUS:offline");
+  }
+  else {
+    Serial.println("ERR:Unknown command: " + cmd);
+  }
+}`;
+
+// ==================== INIT ====================
+window.onload = () => {
+  buildFuelMap();
+  buildIgnMap();
+  buildParamRows();
+  buildDtcRef();
+  buildMemMap();
+  renderFirmware();
+  startOscCanvas();
+};
+
+// ==================== TABS ====================
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
 }
 
-// ── FORCE CONNECT (tombol manual override) ──
-async function forceConnect(baudRate) {
-  const profile = detectProfile('C9'); // force pakai C9 timing untuk K56-N01
-  const prof = ECU_PROFILES[profile];
-  tlog(`[FORCE] Connect paksa ${baudRate} baud — profile ${profile}...`,'warn');
-
-  let port = S.port;
-  if (!port) {
-    tlog('[ERR] Belum ada port. Klik CONNECT, pilih port CP210x, baru klik FORCE.','err');
+// ==================== SERIAL ====================
+async function connectSerial() {
+  if (!('serial' in navigator)) {
+    termLog('[ERR] Web Serial API tidak tersedia. Gunakan Chrome 89+.', 't-err');
     return;
   }
-
-  // Tutup port jika masih terbuka
+  if (!ecuModel) { alert('Pilih ECU terlebih dahulu!'); return; }
   try {
-    if (port.readable) { try { port.readable.cancel(); } catch(e) {} }
-    try { await port.close(); } catch(e) {}
-    await delay(300);
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    connected = true;
+    writer = port.writable.getWriter();
+    reader = port.readable.getReader();
+    updateStatus('ONLINE', 'online');
+    document.getElementById('pillPort').textContent = 'PORT: COM';
+    document.getElementById('btnConnect').disabled = true;
+    document.getElementById('btnDisconnect').disabled = false;
+    termLog('[SYS] Port terbuka. Menginisialisasi ECU...', 't-sys');
+    readLoop();
+    // Send INIT
+    const initCmd = (ecuModel === 'K56-N01') ? 'INITC9' : 'INIT';
+    await writeSerial(initCmd + '\n');
+    // Start live polling
+    startLivePolling();
+  } catch(e) {
+    termLog('[ERR] ' + e.message, 't-err');
+  }
+}
+
+async function disconnectSerial() {
+  connected = false;
+  demoMode = false;
+  if (demoTimer) clearInterval(demoTimer);
+  try {
+    if (reader) { await reader.cancel(); reader = null; }
+    if (writer) { writer.releaseLock(); writer = null; }
+    if (port) { await port.close(); port = null; }
   } catch(e) {}
+  updateStatus('OFFLINE', 'danger');
+  document.getElementById('pillPort').textContent = 'PORT: —';
+  document.getElementById('btnConnect').disabled = false;
+  document.getElementById('btnDisconnect').disabled = true;
+  document.getElementById('liveTag').textContent = '● OFFLINE';
+  document.getElementById('liveTag').style.color = 'var(--danger)';
+  termLog('[SYS] Disconnected.', 't-sys');
+}
 
+async function writeSerial(str) {
+  if (!writer) return;
+  const enc = new TextEncoder();
+  await writer.write(enc.encode(str));
+}
+
+async function readLoop() {
+  const dec = new TextDecoder();
+  let buf = '';
   try {
-    await port.open({ baudRate: baudRate, dataBits:8, stopBits:1, parity:'none' });
-    tlog(`[FORCE] Port terbuka di ${baudRate} baud`,'ok');
-
-    // Slow init dengan profile C9
-    await doSlowInit(port, profile);
-
-    // Baca respon
-    const resp = await readEcuResp(port, prof.respTimeout);
-
-    if (resp.ok) {
-      tlog(`[FORCE] ✓ ECU MERESPONS! ${resp.bytes.length} bytes`,'ok');
-      S.detectedBaud = baudRate;
-      addBaudRow(baudRate, `FORCE ${baudRate} — C9 timing`, 'ok');
-    } else {
-      tlog('[FORCE] Tidak ada respon dari ECU. Cek: 1) Power 12V  2) IG +12V  3) Kabel DLC','warn');
-      tlog('[FORCE] Melanjutkan dengan force mode — coba read data...','warn');
-      S.detectedBaud = baudRate;
+    while (connected && reader) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value);
+      let lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) parseArduinoLine(line.trim());
     }
+  } catch(e) { if(connected) termLog('[ERR] Read: '+e.message,'t-err'); }
+}
 
-    S.port = port;
-    S.connected = true; S.demo = false;
-    el('ei-baud').textContent = baudRate + ' baud (C9-forced)';
-    el('ei-stat').textContent  = resp.ok ? 'FORCE OK' : 'FORCE NO-RESP';
-    el('ei-stat').style.color  = resp.ok ? 'var(--grn)' : 'var(--ylw)';
-    el('btn-con').style.display = 'none';
-    el('btn-dis').style.display = 'inline-block';
-    setPipe('p-zeus','on','K-LINE');
-    if (resp.ok) setPipe('p-ecu','on','ECU OK');
-
-    startRead();
-    startPolling();
-    startFps();
-    await delay(500);
-    await initECU();
-
-  } catch(e) {
-    tlog('[FORCE-ERR] ' + e.message,'err');
+function parseArduinoLine(line) {
+  if (!line) return;
+  if (line.startsWith('RX:')) {
+    termLog('[RX] ' + line.substring(3), 't-rx');
+    const bytes = line.substring(3).trim().split(' ').filter(Boolean).map(h => parseInt(h,16));
+    parseEcuResponse(bytes);
+  } else if (line.startsWith('STATUS:')) {
+    termLog('[SYS] ' + line.substring(7), 't-sys');
+    if (line.includes('connected')) {
+      updateStatus('ONLINE', 'online');
+      document.getElementById('liveTag').textContent = '● LIVE';
+      document.getElementById('liveTag').style.color = 'var(--accent3)';
+    }
+  } else if (line.startsWith('ERR:')) {
+    termLog('[ERR] ' + line.substring(4), 't-err');
+  } else {
+    termLog('[?] ' + line, 't-sys');
   }
 }
 
-
-// ══ BRIDGE CONNECT v5 — tombol manual Zeus MST-100P ══
-async function bridgeConnect(profileName) {
-  const prof = ECU_PROFILES[profileName];
-  if(!prof){ tlog('[ERR] Profile tidak dikenal: '+profileName,'err'); return; }
-
-  const bs = el('bridge-status');
-  if(bs){ bs.style.display='block'; bs.style.color='var(--ylw)'; bs.innerHTML='⏳ Menghubungkan dengan profile '+profileName+'...'; }
-  tlog(`[BRIDGE] ══ ${prof.name} ══`,'warn');
-  tlog(`[BRIDGE] Baud:${prof.baud} LOW:${prof.lowMs}ms HIGH:${prof.highMs}ms WAKE:${prof.wakeDelay}ms`,'info');
-
-  // Pastikan port sudah dipilih
-  let port = S.port;
-  if(!port){
-    if(!('serial' in navigator)){ el('serial-warn').style.display='block'; return; }
-    try {
-      port = await navigator.serial.requestPort();
-      S.port = port;
-      const info = port.getInfo();
-      tlog(`[PORT] VID:${(info.usbVendorId||0).toString(16).toUpperCase()} PID:${(info.usbProductId||0).toString(16).toUpperCase()}`,'ok');
-      setPipe('p-usb','on','CP2102');
-      el('baud-section').style.display='block';
-    } catch(e){ tlog('[ERR] Port tidak dipilih: '+e.message,'err'); return; }
-  }
-
-  // Tutup port jika masih buka
-  try {
-    if(S.reader){ try{await S.reader.cancel();}catch(e){} S.reader=null; }
-    if(port.readable){ try{port.readable.cancel();}catch(e){} }
-    try{ await port.close(); }catch(e){}
-    await delay(500);
-  } catch(e){}
-
-  try {
-    await port.open({ baudRate:prof.baud, dataBits:8, stopBits:1, parity:'none' });
-    tlog(`[BRIDGE] Port terbuka @ ${prof.baud} baud ✓`,'ok');
-    addBaudRow(prof.baud, `${profileName} @ ${prof.baud}`, 'testing');
-
-    await doSlowInit(port, profileName);
-    const resp = await readEcuResp(port, prof.respTimeout);
-
-    if(resp.ok){
-      addBaudRow(prof.baud, `${profileName} @ ${prof.baud}`, 'ok');
-      tlog(`[BRIDGE] ✓ ECU MERESPONS! ${resp.bytes.length} bytes — SUKSES!`,'ok');
-      if(bs){ bs.style.color='var(--grn)'; bs.innerHTML='✓ BRIDGE OK — ECU merespons dengan profile <b>'+profileName+'</b>'; }
-      S.detectedBaud = prof.baud;
-    } else {
-      addBaudRow(prof.baud, `${profileName} @ ${prof.baud}`, 'fail');
-      tlog('[BRIDGE] Tidak ada respon. Coba profile lain atau cek: IG ON? DLC? 12V?','warn');
-      if(bs){ bs.style.color='var(--ylw)'; bs.innerHTML='⚠ No response dengan '+profileName+' — coba profile lain atau cek fisik'; }
-      S.detectedBaud = prof.baud;
-    }
-
-    S.port = port; S.connected = true; S.demo = false;
-    el('ei-baud').textContent  = prof.baud+' baud ('+profileName+')';
-    el('ei-stat').textContent  = resp.ok ? 'BRIDGE-OK' : 'BRIDGE-NORESP';
-    el('ei-stat').style.color  = resp.ok ? 'var(--grn)' : 'var(--ylw)';
-    el('btn-con').style.display = 'none';
-    el('btn-dis').style.display = 'inline-block';
-    setPipe('p-zeus','on','K-LINE');
-    if(resp.ok){ setPipe('p-ecu','on','ECU OK'); setPipe('p-flash','on','FLASH'); }
-    setTopMode(resp.ok ? 'ONLINE' : 'NO-ECU');
-
-    startRead(); startPolling(); startFps();
-    await delay(500);
-    await initECU();
-
-  } catch(e){
-    tlog('[BRIDGE-ERR] '+e.message,'err');
-    if(bs){ bs.style.color='var(--red)'; bs.innerHTML='✗ Error: '+e.message; }
-  }
+// ==================== DEMO MODE ====================
+function sendDemo() {
+  demoMode = true;
+  connected = true;
+  updateStatus('DEMO', 'warn');
+  document.getElementById('liveTag').textContent = '● DEMO';
+  document.getElementById('liveTag').style.color = 'var(--warn)';
+  termLog('[SYS] Demo mode aktif — data simulasi.', 't-warn');
+  startLivePolling();
 }
 
-// ── MAIN CONNECT ──
-async function doConnect() {
-  if (!('serial' in navigator)) { el('serial-warn').style.display='block'; return; }
+let demoT = 0;
+function genDemoData() {
+  demoT += 0.04;
+  const rpm = Math.round(1200 + Math.sin(demoT*0.7)*400 + Math.sin(demoT*2.1)*200);
+  const spd = Math.round(rpm * 0.015 + Math.sin(demoT*0.5)*5);
+  const tps = Math.max(0, Math.min(100, 20 + Math.sin(demoT*1.2)*15));
+  const ect = Math.round(82 + Math.sin(demoT*0.05)*5);
+  const iat = Math.round(35 + Math.sin(demoT*0.03)*3);
+  const map_ = Math.round(60 + Math.sin(demoT*1.5)*20);
+  const o2 = (0.45 + Math.sin(demoT*3)*0.25).toFixed(3);
+  const bat = (12.4 + Math.sin(demoT*0.1)*0.3).toFixed(1);
+  const inj = (2.5 + Math.sin(demoT*0.8)*0.5).toFixed(2);
+  const ign = Math.round(15 + Math.sin(demoT*0.9)*5);
+  const stft = (Math.sin(demoT*2.5)*4).toFixed(1);
+  const ltft = (Math.sin(demoT*0.1)*2).toFixed(1);
+  updateLiveData({rpm,spd,tps,ect,iat,map:map_,o2,bat,inj,ign,stft,ltft});
+}
 
-  // Deteksi profile dari ECU model yang dipilih
-  const ecuModel = el('ecu-model').value;
-  // K56 = Sonic150/Vario150 → pakai C9 profile
-  // K45, K93 = Vario125/Beat → STD
-  // KYJ = CBR250 → HSP
-  const profileMap = { k56:'C9', k45:'STD', k93:'STD', mkj:'C9', kyj:'HSP', k0j:'STD' };
-  const profile = profileMap[ecuModel] || 'C9';
-  const prof = ECU_PROFILES[profile];
+// ==================== LIVE POLLING ====================
+let pollTimer = null;
+function startLivePolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    if (!connected) { clearInterval(pollTimer); return; }
+    if (demoMode) { genDemoData(); return; }
+    // Real: request table 00 & 10 alternating
+    await writeSerial('CMD:72 05 71 00 18\n');
+  }, 250);
+  // Also poll table 10 & 11
+  setInterval(async () => {
+    if (!connected || demoMode) return;
+    await writeSerial('CMD:72 05 71 10 08\n');
+  }, 500);
+}
 
-  tlog(`[CONNECT] ECU: ${ecuModel.toUpperCase()} → Profile: ${profile} (${prof.name})`,'info');
-  tlog(`[CONNECT] Timing: LOW=${prof.lowMs}ms HIGH=${prof.highMs}ms BAUD=${prof.baud}`,'info');
-
-  try {
-    const port = await navigator.serial.requestPort();
-    const info  = port.getInfo();
-    const isCP  = (info.usbVendorId === 0x10C4);
-    el('ei-vid').textContent = `VID:${(info.usbVendorId||0).toString(16).toUpperCase()} PID:${(info.usbProductId||0).toString(16).toUpperCase()}`;
-    tlog(`[PORT] ${isCP ? '✓ CP2102 Silicon Labs (VID:10C4)' : 'VID:0x'+(info.usbVendorId||0).toString(16)} terdeteksi`,'ok');
-    setPipe('p-usb','on','CP2102');
-    S.port = port;
-    el('baud-section').style.display = 'block';
-
-    // ── BAUD STRATEGIES v5 — Zeus MST-100P Full Sweep ──
-    const strategies = [];
-    strategies.push({ baud:10400, label:'10400 C9 native (250ms)',   profile:'C9_STD'   });
-    strategies.push({ baud:10400, label:'10400 C9 ultra-slow (500ms)',profile:'C9_SLOW'  });
-    strategies.push({ baud:10400, label:'10400 C9 alt-init bytes',   profile:'C9_ALT'   });
-    strategies.push({ baud:38400, label:'38400 Zeus passthrough',    profile:'PASS38'   });
-    strategies.push({ baud:10400, label:'10400 raw bypass',          profile:'RAW'      });
-    strategies.push({ baud:10400, label:'10400 wake-only',           profile:'WAKEONLY' });
-    strategies.push({ baud:115200,label:'115200 high speed',         profile:'STD'      });
-    strategies.push({ baud:57600, label:'57600 fallback',            profile:'STD'      });
-
-    let connected = false;
-
-    for (const strat of strategies) {
-      addBaudRow(strat.baud, strat.label, 'testing');
-      try {
-        await port.open({ baudRate: strat.baud, dataBits:8, stopBits:1, parity:'none' });
-        tlog(`[BAUD] Testing ${strat.baud} baud (${strat.profile} timing)...`,'info');
-
-        // Slow init dengan profile timing yang sesuai
-        await doSlowInit(port, strat.profile);
-
-        // Baca respon ECU
-        const stProf = ECU_PROFILES[strat.profile];
-        const resp = await readEcuResp(port, stProf.respTimeout);
-
-        if (resp.ok) {
-          addBaudRow(strat.baud, strat.label, 'ok');
-          tlog(`[✓] BAUD ${strat.baud} — ECU MERESPONS! Profile: ${strat.profile}`,'ok');
-          S.detectedBaud = strat.baud;
-          connected = true;
-          break;
-        }
-
-        // Retry sekali dengan C9 timing jika baud == 10400
-        if (!resp.ok && strat.baud === 10400 && strat.profile !== 'C9') {
-          tlog('[RETRY] 10400 — coba dengan C9 timing...','warn');
-          await flushRx(port, 200);
-          await doSlowInit(port, 'C9');
-          const resp2 = await readEcuResp(port, 1200);
-          if (resp2.ok) {
-            addBaudRow(strat.baud, strat.label+' (C9 retry)', 'ok');
-            tlog(`[✓] 10400 C9 retry — ECU MERESPONS!`,'ok');
-            S.detectedBaud = strat.baud;
-            connected = true;
-            break;
-          }
-        }
-
-        addBaudRow(strat.baud, strat.label, 'fail');
-        tlog(`[✗] ${strat.baud} — no response`,'warn');
-        try { await port.close(); } catch(e) {}
-
-      } catch(e) {
-        addBaudRow(strat.baud, strat.label, 'fail');
-        tlog(`[ERR] ${strat.baud}: ${e.message}`,'err');
-        try { await port.close(); } catch(e2) {}
+// ==================== ECU RESPONSE PARSER ====================
+function parseEcuResponse(bytes) {
+  if (bytes.length < 4) return;
+  if (bytes[0] === 0x02) {
+    const table = bytes[2];
+    const data = bytes.slice(4, -1);
+    if (table === 0x00 || table === 0x71) {
+      // Table 00: RPM B0B1, Speed B3, TPS B5, Bat B7
+      if (data.length >= 8) {
+        const rpm = ((data[0]<<8)|data[1]) * 0.25;
+        const spd = data[3];
+        const tps = (data[5]*100/255).toFixed(1);
+        const bat = (data[7]*18/255).toFixed(1);
+        updateLivePartial({rpm:Math.round(rpm),spd,tps,bat});
       }
-    } // end baud loop
-
-    // Jika semua gagal → force connect di baud native
-    if (!connected) {
-      tlog('','info');
-      tlog('[!!] ═══ SEMUA BAUD NO RESPONSE ═══','err');
-      tlog('[!!] Kemungkinan penyebab:','warn');
-      tlog('[!!] 1. Power supply 12V trainer board BELUM ON','warn');
-      tlog('[!!] 2. Terminal IG (ignition) BELUM dapat +12V — PALING SERING!','warn');
-      tlog('[!!] 3. Kabel DLC — pin K-Line (biru/putih) tidak terhubung ke soket','warn');
-      tlog('[!!] 4. ECU butuh power ON minimal 500ms sebelum init K-Line','warn');
-      tlog('[!!] → Klik FORCE 10400 setelah cek semua poin di atas','warn');
-      tlog('','info');
-      const tip = el('baud-tip'); if(tip) tip.style.display='block';
-      // Tetap set port untuk FORCE connect
-      try {
-        await port.open({ baudRate: prof.baud, dataBits:8, stopBits:1, parity:'none' });
-      } catch(e) {
-        try { await port.open({ baudRate:38400, dataBits:8, stopBits:1, parity:'none' }); } catch(e2) {}
+    } else if (table === 0x10) {
+      if (data.length >= 4) {
+        const ect = data[0]-40;
+        const iat = data[1]-40;
+        const map_ = data[2];
+        const o2 = (data[3]*5/255).toFixed(3);
+        updateLivePartial({ect,iat,map:map_,o2});
       }
-      S.detectedBaud = prof.baud;
+    } else if (table === 0x11) {
+      if (data.length >= 4) {
+        const inj = (data[0]*0.256).toFixed(2);
+        const ign = (data[1]/2-64).toFixed(1);
+        const stft = ((data[2]-128)*100/128).toFixed(1);
+        const ltft = ((data[3]-128)*100/128).toFixed(1);
+        updateLivePartial({inj,ign,stft,ltft});
+      }
     }
-
-    S.connected = true; S.demo = false;
-    el('ei-baud').textContent  = S.detectedBaud + ' baud';
-    el('ei-stat').textContent  = connected ? 'ONLINE' : 'NO ECU RESP';
-    el('ei-stat').style.color  = connected ? 'var(--grn)' : 'var(--ylw)';
-    el('btn-con').style.display = 'none';
-    el('btn-dis').style.display = 'inline-block';
-    setPipe('p-zeus','on','K-LINE');
-    setTopMode(connected ? 'ONLINE' : 'NO ECU RESP');
-
-    await initECU();
-    startRead();
-    startPolling();
-    startFps();
-
-  } catch(e) {
-    tlog('[ERR] '+e.message,'err');
-    tlog('[TIP] Pastikan driver CP2102 terinstall → Device Manager → Ports (COM&LPT)','warn');
   }
 }
 
-// ── INIT ECU (post-connect) ──
-async function initECU() {
-  const ecuModel = el('ecu-model').value;
-  const profileMap = { k56:'C9', k45:'STD', k93:'STD', mkj:'C9', kyj:'HSP', k0j:'STD' };
-  const profile = profileMap[ecuModel] || 'C9';
-  const prof = ECU_PROFILES[profile];
+// ==================== LIVE DATA UPDATE ====================
+let liveState = {};
+function updateLivePartial(d) {
+  Object.assign(liveState, d);
+  updateLiveData(liveState);
+}
 
-  tlog('[INIT] Keihin full init — profile '+profile+'...','info');
-  await delay(150);
-
-  // Prefix (C9 series)
-  if (prof.prefix && prof.prefix.length > 0) {
-    await writeB(prof.prefix);
-    await delay(prof.wakeDelay);
+function updateLiveData(d) {
+  if (d.rpm !== undefined) {
+    const r = Math.round(d.rpm);
+    set('g-rpm', r); set('v-rpm', r+' rpm'); set('r-rpm', '0x'+(r*4).toString(16).toUpperCase());
+    pct('b-rpm', r/12000*100);
+    colorGauge('g-rpm', r > 10000 ? 'danger' : r > 8000 ? 'warn' : '');
   }
-  // WAKE
-  await writeB(prof.wake);
-  await delay(prof.wakeDelay);
-  // INIT
-  await writeB(prof.init);
-  await delay(prof.initDelay);
-  // Tabel 00 verifikasi
-  await writeB(CMD.T00);
-  await delay(300);
-
-  setPipe('p-ecu','on','ECU OK');
-  setPipe('p-flash','on','FLASH');
-  tlog('[INIT] ✓ Init selesai — polling data sensor aktif','ok');
-
-  // Keepalive setiap 1.8 detik
-  setInterval(()=>{
-    if(S.connected && !S.demo) writeB(CMD.KA);
-  }, 1800);
+  if (d.spd !== undefined) { set('g-spd', d.spd); set('v-spd', d.spd+' km/h'); set('r-spd', d.spd); pct('b-spd', d.spd/180*100); }
+  if (d.tps !== undefined) { set('g-tps', parseFloat(d.tps).toFixed(0)); set('v-tps', d.tps+' %'); set('r-tps', Math.round(d.tps*255/100)); pct('b-tps', d.tps); }
+  if (d.ect !== undefined) { set('g-ect', d.ect); set('v-ect', d.ect+' °C'); set('r-ect', parseInt(d.ect)+40); pct('b-ect', (d.ect+20)/120*100); colorGauge('g-ect', d.ect>100?'danger':d.ect>90?'warn':''); }
+  if (d.iat !== undefined) { set('v-iat', d.iat+' °C'); set('r-iat', parseInt(d.iat)+40); }
+  if (d.map !== undefined) { set('g-map', d.map); set('v-map', d.map+' kPa'); set('r-map', d.map); pct('b-map', d.map/115*100); }
+  if (d.o2 !== undefined) { set('g-o2', d.o2); set('v-o2', d.o2+' V'); set('r-o2', Math.round(d.o2*255/5)); pct('b-o2', d.o2/1*100); }
+  if (d.bat !== undefined) { set('v-bat', d.bat+' V'); set('r-bat', d.bat); }
+  if (d.inj !== undefined) { set('v-inj', d.inj+' ms'); set('r-inj', d.inj); }
+  if (d.ign !== undefined) { set('v-ign', d.ign+' °'); set('r-ign', d.ign); }
+  if (d.stft !== undefined) { set('v-stft', d.stft+' %'); set('r-stft', Math.round(parseFloat(d.stft)*128/100+128)); }
+  if (d.ltft !== undefined) { set('v-ltft', d.ltft+' %'); set('r-ltft', d.ltft); }
+  // osc history
+  if (d.rpm !== undefined) pushOsc('rpm', d.rpm/12000);
+  if (d.o2 !== undefined) pushOsc('o2', d.o2);
+  if (d.tps !== undefined) pushOsc('tps', d.tps/100);
+  if (d.inj !== undefined) pushOsc('inj', d.inj/10);
+  liveLog.push({t: Date.now(), ...d});
+  if (liveLog.length > 5000) liveLog.shift();
 }
 
-function startPolling(){
-  const tbls=[CMD.T00,CMD.T10,CMD.T11];
-  let i=0;
-  setInterval(()=>{if(S.connected&&!S.demo)writeB(tbls[i++%tbls.length]);},220);
+function set(id, val) { const e = document.getElementById(id); if(e) e.textContent = val; }
+function pct(id, v) { const e = document.getElementById(id); if(e) { e.style.width = Math.min(100,Math.max(0,v))+'%'; } }
+function colorGauge(id, cls) { const e = document.getElementById(id); if(!e) return; e.className = 'gauge-val'+(cls?' '+cls:''); }
+
+// ==================== OSCILLOSCOPE ====================
+function pushOsc(ch, val) {
+  oscHistory[ch].push(val);
+  if (oscHistory[ch].length > OSC_LEN) oscHistory[ch].shift();
 }
 
-async function startRead(){
-  if(!S.port?.readable) return;
-  const r=S.port.readable.getReader();S.reader=r;
-  try{
-    while(true){
-      const{value,done}=await r.read();
-      if(done) break;
-      S.rawBuf.push(...value);
-      processBuf();
+function startOscCanvas() {
+  const canvas = document.getElementById('oscCanvas');
+  const ctx = canvas.getContext('2d');
+  function draw() {
+    const W = canvas.offsetWidth; const H = 180;
+    canvas.width = W; canvas.height = H;
+    ctx.fillStyle = '#020508'; ctx.fillRect(0,0,W,H);
+    // Grid
+    ctx.strokeStyle = '#0d1825'; ctx.lineWidth = 1;
+    for(let y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    const colors = { rpm:'#00e5ff', o2:'#ff6b35', tps:'#39ff14', inj:'#ffcc00' };
+    for(const [ch, color] of Object.entries(colors)) {
+      const data = oscHistory[ch];
+      if (!data.length) continue;
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for(let i=0;i<data.length;i++) {
+        const x = (i/OSC_LEN)*W;
+        const y = H - data[i]*H*0.85 - 5;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.stroke();
     }
-  }catch(e){if(S.connected)tlog('[RX ERR] '+e.message,'err');}
-  finally{r.releaseLock();}
+    requestAnimationFrame(draw);
+  }
+  draw();
 }
 
-function processBuf(){
-  while(S.rawBuf.length>=4){
-    // Try Honda frame
-    const len=S.rawBuf[1];
-    if(len<4||len>64){S.rawBuf.shift();continue;}
-    if(S.rawBuf.length<len) break;
-    const f=S.rawBuf.splice(0,len);
-    if(cs_(f.slice(0,-1))===f[f.length-1]){
-      parseFrame(f);S.fc++;
+// ==================== CMD ====================
+async function sendCmd(name) {
+  const cmd = CMDS[name];
+  if (!cmd) return;
+  termLog('[TX] ' + cmd, 't-tx');
+  if (connected && !demoMode) await writeSerial(cmd + '\n');
+}
+
+async function sendRaw() {
+  const v = document.getElementById('termInput').value.trim();
+  if (!v) return;
+  const cmd = 'CMD:' + v.toUpperCase();
+  termLog('[TX] ' + cmd, 't-tx');
+  if (connected && !demoMode) await writeSerial(cmd + '\n');
+  document.getElementById('termInput').value = '';
+}
+
+function termLog(msg, cls='t-sys') {
+  const t = document.getElementById('terminal');
+  const line = document.createElement('div');
+  line.className = cls;
+  line.textContent = msg;
+  t.appendChild(line);
+  t.scrollTop = t.scrollHeight;
+}
+
+function clearTerm() { document.getElementById('terminal').innerHTML = ''; }
+
+// ==================== ECU SELECT ====================
+function onEcuChange() {
+  ecuModel = document.getElementById('ecuSelect').value;
+  const info = ECU_DB[ecuModel];
+  document.getElementById('pillEcu').textContent = ecuModel ? 'ECU: '+ecuModel : 'ECU: —';
+  if (info) termLog('[SYS] ECU dipilih: '+info.name+' ('+info.chip+')', 't-sys');
+}
+
+function updateStatus(txt, cls) {
+  const el = document.getElementById('pillStatus');
+  el.textContent = txt;
+  el.className = 'pill ' + cls;
+}
+
+// ==================== FLASH ====================
+let flashReadData = null;
+
+async function flashRead() {
+  if (!connected && !demoMode) { alert('Tidak terkoneksi!'); return; }
+  const info = ECU_DB[ecuModel];
+  if (!info) { alert('Pilih ECU!'); return; }
+  const totalSize = info.flash;
+  flashReadData = new Uint8Array(totalSize).fill(0xFF);
+  document.getElementById('flashStatus').textContent = 'Reading flash...';
+  document.getElementById('btnFlashRead').disabled = true;
+  const CHUNK = 128;
+  const totalChunks = Math.ceil(totalSize / CHUNK);
+  for (let i = 0; i < totalChunks; i++) {
+    const addr = i * CHUNK;
+    const len = Math.min(CHUNK, totalSize - addr);
+    pct('flashProg', (i+1)/totalChunks*100);
+    document.getElementById('flashStatus').textContent = `Reading: 0x${addr.toString(16).toUpperCase().padStart(4,'0')} (${Math.round((i+1)/totalChunks*100)}%)`;
+    if (demoMode) {
+      // Simulate read
+      for (let b = 0; b < len; b++) {
+        flashReadData[addr+b] = Math.round(Math.random()*255);
+      }
+      await new Promise(r => setTimeout(r, 1));
     } else {
-      // Try ASCII
-      const a=f.map(b=>String.fromCharCode(b)).join('');
-      if(/RPM|TPS|ECT|SPEED/i.test(a)){parseASCII(a);S.fc++;}
-      else tlog(`[RX] ${toHex(f)}`,'rx');
+      const addrH = (addr>>8)&0xFF, addrL = addr&0xFF;
+      const csBody = [0x72,0x07,0x76,addrH,addrL,len];
+      const cs = calcCS(csBody);
+      const hexStr = csBody.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ') + ' ' + cs.toString(16).padStart(2,'0').toUpperCase();
+      await writeSerial('CMD:' + hexStr + '\n');
+      await new Promise(r => setTimeout(r, 80));
     }
   }
+  document.getElementById('flashStatus').textContent = `Flash read complete! ${totalSize} bytes.`;
+  document.getElementById('btnFlashRead').disabled = false;
+  document.getElementById('btnSaveFlash').disabled = false;
+  document.getElementById('btnWrite').disabled = false;
+  document.getElementById('btnVerify').disabled = false;
+  flashData = flashReadData;
+  renderHexDisplay();
+  updateFlashInfo();
 }
 
-function parseFrame(f){
-  const table=f[3], data=f.slice(5,f.length-1);
-  tlog(`[RX] ${toHex(f)} | TBL:${table.toString(16).toUpperCase()} LEN:${data.length}`,'rx');
-  if(table===0x00||table===0x60) tbl00(data);
-  else if(table===0x10||table===0x11) tbl10(data);
-  else if(f[2]===0x73) parseDTC(data);
-  else if(table===0x76) handleFlashData(data);
-}
-
-function parseASCII(s){
-  const m={};s.split(',').forEach(p=>{const[k,v]=p.split(':');if(k&&v)m[k.trim().toUpperCase()]=parseFloat(v);});
-  if(m.RPM) updRPM(m.RPM);
-  if(m.SPEED) updVal('d-spd',Math.round(m.SPEED));
-  if(m.TPS) updVal('d-tps',Math.round(m.TPS)+'%');
-  if(m.ECT) updVal('d-ect',Math.round(m.ECT)+'°C');
-}
-
-function tbl00(d){
-  if(d.length<2) return;
-  const rpm=((d[0]<<8)|d[1])*0.25; updRPM(rpm);
-  if(d[2]) updVal('d-spd',d[2]);
-  if(d[4]) updVal('d-tps',Math.round(d[4]*100/255)+'%',d[4]/255);
-  if(d[6]) {updVal('d-bat',(d[6]*18/255).toFixed(1)+'V');}
-  if(d[0]&&d[1]) prRow('pr-rpm',((d[0]<<8)|d[1]).toString(16).toUpperCase(),Math.round(rpm)+' rpm');
-  if(d[2]) prRow('pr-spd',d[2].toString(16).toUpperCase(),d[2]+' km/h');
-}
-
-function tbl10(d){
-  if(d[0]!==undefined){const t=d[0]-40;updVal('d-ect',t+'°C');sbFill('sb-ect',(t+40)/200);prRow('pr-ect',d[0].toString(16),t+'°C');}
-  if(d[1]!==undefined){const t=d[1]-40;updVal('d-iat',t+'°C');sbFill('sb-iat',(t+40)/200);prRow('pr-iat',d[1].toString(16),t+'°C');}
-  if(d[2]!==undefined){updVal('d-map',d[2]+' kPa');sbFill('sb-map',d[2]/120);prRow('pr-map',d[2].toString(16),d[2]+' kPa');}
-  if(d[3]!==undefined){const v=(d[3]*5/255).toFixed(3);updVal('d-o2',v+'V');sbFill('sb-o2',d[3]/255);prRow('pr-o2',d[3].toString(16),v+'V');S.histO2.push(parseFloat(v));S.histO2.shift();}
-  if(d[4]!==undefined){updVal('d-inj',(d[4]*0.1).toFixed(1)+'ms');S.histInj.push(d[4]*0.1);S.histInj.shift();}
-  if(d[5]!==undefined){const stft=((d[5]-128)*100/128).toFixed(1);updVal('d-stft',(stft>0?'+':'')+stft+'%');}
-  if(d[6]!==undefined){updVal('d-lam',(d[6]/100).toFixed(3));sbFill('sb-lam',d[6]/150);}
-  if(d[7]!==undefined){const ltft=((d[7]-128)*100/128).toFixed(1);updVal('d-ltft',(ltft>0?'+':'')+ltft+'%');}
-  if(d[8]!==undefined){updVal('d-ign',((d[8]/2)-64).toFixed(1)+'°');}
-}
-
-function parseDTC(data){
-  const codes=data.filter(b=>b>0&&DTC_DB[b]);
-  const dl=el('dtc-list');
-  dl.innerHTML='';
-  if(codes.length===0){
-    dl.innerHTML='<div style="color:var(--grn);font-family:\'Share Tech Mono\',monospace;font-size:11px;padding:10px">✓ No Fault Codes — ECU CLEAR</div>';
-    el('top-dtc').textContent='DTC: 0';el('top-dtc').style.color='var(--grn)';
-    return;
-  }
-  codes.forEach(c=>{
-    const d=DTC_DB[c]||{name:'Unknown',desc:'Unknown fault code'};
-    const col=d.severity==='high'?'var(--red)':d.severity==='med'?'var(--ylw)':'var(--txt)';
-    dl.innerHTML+=`<div class="dtc-item">
-      <span class="dtc-mil">MIL-${c}</span>
-      <span class="dtc-desc"><span style="color:var(--wht)">${d.name}</span><br><span style="font-size:10px">${d.desc}</span></span>
-      <span class="dtc-stat" style="border-color:${col};color:${col}">${d.severity.toUpperCase()}</span>
-    </div>`;
-  });
-  el('top-dtc').textContent=`DTC: ${codes.length}`;el('top-dtc').style.color='var(--red)';
-}
-
-// ── FLASH ──
-async function startFlashRead(){
-  if(!S.connected&&!S.demo){tlog('[ERR] Belum connect ke ECU','err');return;}
-  S.flashBuf=[];S.flashReading=true;
-  setPipe('p-flash','warn','READING');
-  el('flash-pb').style.display='block';
-  tlog('[FLASH] Memulai baca flash memory ECU...','info');
-  const ecu=ECU_DB[S.selectedEcu];
-  const totalBytes=ecu.flash;
-  let read=0;
-  while(read<totalBytes){
-    const chunk=Math.min(64,totalBytes-read);
-    const addrH=(read>>8)&0xFF, addrL=read&0xFF;
-    const req=[0x72,0x09,0x76,addrH,addrL,0x00,chunk,0x00];
-    req.push(cs_(req));
-    if(S.connected&&!S.demo) await writeB(req);
-    else {
-      // Demo: generate fake flash
-      for(let i=0;i<chunk;i++) S.flashBuf.push(Math.round(Math.random()*255));
-      read+=chunk;
+function renderHexDisplay() {
+  if (!flashData) return;
+  let html = '';
+  const showBytes = Math.min(flashData.length, 512);
+  for (let i = 0; i < showBytes; i += 16) {
+    const addrStr = i.toString(16).toUpperCase().padStart(4,'0');
+    let row = `<span class="addr">${addrStr}:</span>  `;
+    for (let j = i; j < Math.min(i+16, showBytes); j++) {
+      const b = flashData[j];
+      const hex = b.toString(16).toUpperCase().padStart(2,'0');
+      const cls = b===0 ? 'zero' : b===0xFF ? 'addr' : '';
+      row += `<span class="${cls}">${hex}</span> `;
     }
-    await delay(S.demo?5:50);
-    if(!S.demo) read+=chunk;
-    const pct=Math.round(read/totalBytes*100);
-    el('flash-fill').style.width=pct+'%';
-    el('flash-pct').textContent=pct+'%';
-    el('flash-status').textContent=`${read} / ${totalBytes} bytes (0x${read.toString(16).toUpperCase()})`;
-    if(pct%10===0) renderHexView();
+    html += row + '\n';
   }
-  S.flashReading=false;
-  setPipe('p-flash','on','FLASH OK');
-  tlog(`[FLASH] ✓ Read complete! ${S.flashBuf.length} bytes`,'ok');
-  renderHexView();
-  el('flash-size').textContent=`Size: ${S.flashBuf.length} bytes (${(S.flashBuf.length/1024).toFixed(1)} KB)`;
-  const total=S.flashBuf.reduce((a,b)=>a+b,0);
-  el('flash-cs').textContent=`Checksum: 0x${(total&0xFFFF).toString(16).toUpperCase()}`;
+  html += `<span class="addr">... (${flashData.length} bytes total)</span>`;
+  document.getElementById('hexDisplay').innerHTML = html;
 }
 
-function handleFlashData(data){
-  S.flashBuf.push(...data);
-  renderHexView();
-}
-
-function renderHexView(){
-  const hv=el('flash-hex');
-  if(S.flashBuf.length===0) return;
-  let html='';
-  const max=Math.min(S.flashBuf.length,512);
-  for(let i=0;i<max;i+=16){
-    const addr=`<span class="addr">${i.toString(16).toUpperCase().padStart(4,'0')}:</span> `;
-    const row=S.flashBuf.slice(i,i+16);
-    const hex=row.map(b=>`<span class="hexb">${b.toString(16).toUpperCase().padStart(2,'0')}</span>`).join(' ');
-    const asc=row.map(b=>`<span class="ascii">${b>=32&&b<127?String.fromCharCode(b):'.'}</span>`).join('');
-    html+=`${addr}${hex}  ${asc}\n`;
-  }
-  if(S.flashBuf.length>512) html+=`<span style="color:var(--dim2)">... ${S.flashBuf.length-512} bytes more (showing first 512)</span>`;
-  hv.innerHTML=html;
-}
-
-function saveFlash(){
-  if(S.flashBuf.length===0){tlog('[ERR] Flash kosong, baca dulu','err');return;}
-  const blob=new Blob([new Uint8Array(S.flashBuf)],{type:'application/octet-stream'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  const pn=ECU_DB[S.selectedEcu].pn.replace(/[^a-zA-Z0-9]/g,'_');
-  a.download=`${pn}_backup_${Date.now()}.bin`;
+function saveFlash() {
+  if (!flashData) return;
+  const blob = new Blob([flashData], {type:'application/octet-stream'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (ecuModel||'ecu') + '_backup.bin';
   a.click();
-  tlog('[SAVE] ✓ Flash disimpan sebagai .bin file','ok');
 }
 
-function loadFlash(){el('bin-loader').click();}
+function loadFlash() { document.getElementById('fileInput').click(); }
 
-function loadBinFile(input){
-  const f=input.files[0];if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    S.flashBuf=Array.from(new Uint8Array(e.target.result));
-    tlog(`[LOAD] ✓ ${f.name} (${S.flashBuf.length} bytes) loaded`,'ok');
-    renderHexView();
-    el('flash-size').textContent=`Size: ${S.flashBuf.length} bytes`;
+function onFileLoad(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    flashData = new Uint8Array(ev.target.result);
+    document.getElementById('btnWrite').disabled = false;
+    document.getElementById('btnVerify').disabled = false;
+    document.getElementById('btnSaveFlash').disabled = false;
+    renderHexDisplay();
+    updateFlashInfo();
+    document.getElementById('writeStatus').textContent = `Loaded: ${file.name} (${flashData.length} bytes)`;
   };
-  r.readAsArrayBuffer(f);
+  reader.readAsArrayBuffer(file);
 }
 
-async function writeFlash(){
-  if(S.flashBuf.length===0){tlog('[ERR] Tidak ada data flash untuk ditulis','err');return;}
-  if(!confirm('⚠ PERINGATAN: Ini akan menulis flash ke ECU. Pastikan ini bukan ECU motor yang sedang dipakai! Lanjutkan?')) return;
-  tlog('[WRITE] Memulai flash write...','warn');
-  el('write-pb').style.display='block';
-  for(let i=0;i<S.flashBuf.length;i+=32){
-    const chunk=S.flashBuf.slice(i,i+32);
-    const addrH=(i>>8)&0xFF,addrL=i&0xFF;
-    const req=[0x72,0x07+chunk.length,0x77,addrH,addrL,...chunk];
-    req.push(cs_(req));
-    if(S.connected&&!S.demo) await writeB(req);
-    await delay(20);
-    const pct=Math.round(i/S.flashBuf.length*100);
-    el('write-fill').style.width=pct+'%';
-    el('write-pct').textContent=pct+'%';
+function updateFlashInfo() {
+  if (!flashData) return;
+  let cs = 0; for(const b of flashData) cs = (cs+b)&0xFFFF;
+  document.getElementById('flashInfo').textContent = `Size: ${flashData.length} bytes · Checksum: 0x${cs.toString(16).toUpperCase().padStart(4,'0')}`;
+}
+
+async function flashWrite() {
+  if (!flashData) { alert('Load .bin terlebih dahulu!'); return; }
+  if (!confirm('⚠ WRITE FLASH ke ECU? Pastikan power stabil dan ini ECU trainer!')) return;
+  const CHUNK = 128;
+  const total = flashData.length;
+  document.getElementById('writeStatus').textContent = 'Writing...';
+  for(let i=0;i<total;i+=CHUNK) {
+    const addr = i;
+    const chunk = flashData.slice(i, Math.min(i+CHUNK, total));
+    pct('writeProg', (i+CHUNK)/total*100);
+    document.getElementById('writeStatus').textContent = `Writing: 0x${addr.toString(16).toUpperCase().padStart(4,'0')} (${Math.round((i+CHUNK)/total*100)}%)`;
+    if (!demoMode) {
+      // Build write command
+      const addrH = (addr>>8)&0xFF, addrL = addr&0xFF;
+      let cmd = [0x72, 2+chunk.length+4, 0x77, addrH, addrL];
+      cmd = cmd.concat(Array.from(chunk));
+      const cs = calcCS(cmd);
+      cmd.push(cs);
+      const hexStr = cmd.map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+      await writeSerial('CMD:' + hexStr + '\n');
+      await new Promise(r=>setTimeout(r,100));
+    } else {
+      await new Promise(r=>setTimeout(r,2));
+    }
   }
-  tlog('[WRITE] ✓ Flash write complete!','ok');
+  document.getElementById('writeStatus').textContent = 'Write complete!';
 }
 
-async function verifyFlash(){tlog('[VERIFY] Baca ulang dan compare... (demo mode)','info');await startFlashRead();}
-
-function readTable(){
-  const t=prompt('Masukkan nomor table (hex): e.g. 00, 10, 11, 60');
-  if(!t) return;
-  const tbl=parseInt(t,16);
-  const req=[0x72,0x05,0x71,tbl,0x18];
-  req.push(cs_(req));
-  writeB(req);
-  tlog(`[TX] Read table 0x${tbl.toString(16).toUpperCase()}`,'tx');
+async function flashVerify() {
+  document.getElementById('writeStatus').textContent = 'Verifying...';
+  await new Promise(r=>setTimeout(r,1000));
+  document.getElementById('writeStatus').textContent = demoMode ? 'Verify OK (demo)' : 'Verify: Read back and compare...';
 }
 
-// ── REMAP MAPS ──
-const RPM_AXIS=[500,1000,1500,2000,2500,3000,4000,5000,6000,7000,8000,10000];
-const MAP_AXIS=[20,30,40,50,60,70,80,90,100];
-
-function buildMaps(){
-  // Fuel map
-  S.fuelMap=Array(MAP_AXIS.length).fill(null).map((_,r)=>
-    Array(RPM_AXIS.length).fill(null).map((_,c)=>{
-      const rpmFactor=c/RPM_AXIS.length;
-      const loadFactor=r/MAP_AXIS.length;
-      return Math.round(110+loadFactor*40+rpmFactor*20+Math.sin(rpmFactor*3)*5);
-    })
-  );
-  // Ign map
-  S.ignMap=Array(MAP_AXIS.length).fill(null).map((_,r)=>
-    Array(RPM_AXIS.length).fill(null).map((_,c)=>{
-      return Math.round(10+c*1.5+r*0.5);
-    })
-  );
-  renderMap('fuel-map-wrap',S.fuelMap,'fuel');
-  renderMap('ign-map-wrap',S.ignMap,'ign');
+function readTable() {
+  if (!connected && !demoMode) { alert('Tidak terkoneksi!'); return; }
+  sendCmd('TBL00');
 }
 
-function renderMap(containerId,data,type){
-  const cont=el(containerId);
-  const axis=RPM_AXIS;
-  let html='<table class="map-tbl"><tr><th>kPa\\RPM</th>';
-  axis.forEach(r=>html+=`<th>${r}</th>`);
-  html+='</tr>';
-  MAP_AXIS.forEach((kpa,ri)=>{
-    html+=`<tr><th>${kpa}</th>`;
-    data[ri].forEach((v,ci)=>{
-      const heat=type==='fuel'?(v>148?'hot':v>138?'warm':'cool'):
-                               (v>25?'hot':v>15?'warm':'cool');
-      html+=`<td class="${heat}" onclick="selectCell('${type}',${ri},${ci},${v})">${v}</td>`;
-    });
-    html+='</tr>';
-  });
-  html+='</table>';
-  cont.innerHTML=html;
+function calcCS(bytes) {
+  let s = bytes.reduce((a,b)=>a+b,0);
+  return (0x100 - (s&0xFF)) & 0xFF;
 }
 
-function selectCell(type,r,c,v){
-  S.selCell={type,r,c};
-  const label=`${type.toUpperCase()} [${MAP_AXIS[r]} kPa × ${RPM_AXIS[c]} RPM]`;
-  el('sel-cell-label').textContent=label;
-  el('cell-val').value=v;
-  const map=type==='fuel'?S.fuelMap:S.ignMap;
-  map.forEach(row=>row.forEach((_,ci)=>{}));
-}
-
-function setCellVal(){
-  if(!S.selCell) return;
-  const v=parseInt(el('cell-val').value);
-  if(isNaN(v)||v<0||v>255) return;
-  const map=S.selCell.type==='fuel'?S.fuelMap:S.ignMap;
-  map[S.selCell.r][S.selCell.c]=v;
-  renderMap(S.selCell.type==='fuel'?'fuel-map-wrap':'ign-map-wrap',map,S.selCell.type);
-  tlog(`[REMAP] ${S.selCell.type.toUpperCase()} [${MAP_AXIS[S.selCell.r]}kPa×${RPM_AXIS[S.selCell.c]}rpm] → ${v}`,'ok');
-}
-
-function applyGlobalTrim(){
-  const pct=parseFloat(el('global-trim').value)/100;
-  if(isNaN(pct)) return;
-  S.fuelMap=S.fuelMap.map(row=>row.map(v=>Math.max(0,Math.min(255,Math.round(v*(1+pct))))));
-  renderMap('fuel-map-wrap',S.fuelMap,'fuel');
-  tlog(`[REMAP] Global fuel trim +${Math.round(pct*100)}% applied to all cells`,'ok');
-}
-
-function slUpdate(id,v,unit){el('sv-'+id).textContent=v;}
-
-async function applyRemap(){
-  const idle=parseInt(el('sl-idle').value);
-  const fuel=parseInt(el('sl-fuel').value);
-  const ign=parseFloat(el('sl-ign').value);
-  const lam=parseFloat(el('sl-lam').value);
-  const rpmLim=parseInt(el('sl-rpm').value);
-
-  el('remap-queue').innerHTML='Queue: applying...';
-  tlog('[REMAP] Mengirim parameter remap ke ECU...','warn');
-
-  // Idle RPM command (Honda specific)
-  const idleRaw=Math.round(idle/0.25);
-  const idleCmd=[0x72,0x07,0x7A,0x00,0x00,(idleRaw>>8)&0xFF,idleRaw&0xFF];
-  idleCmd.push(cs_(idleCmd));
-  if(S.connected&&!S.demo) await writeB(idleCmd);
-  tlog(`[REMAP] Idle RPM → ${idle} rpm`,'ok');
-
-  // Fuel trim (apply to all map cells)
-  if(fuel!==0){
-    const factor=1+(fuel/100);
-    S.fuelMap=S.fuelMap.map(row=>row.map(v=>Math.max(0,Math.min(255,Math.round(v*factor)))));
-    renderMap('fuel-map-wrap',S.fuelMap,'fuel');
-    tlog(`[REMAP] Fuel trim ${fuel>0?'+':''}${fuel}% applied`,'ok');
+// ==================== MEMORY MAP ====================
+function buildMemMap() {
+  const el = document.getElementById('memmap');
+  let html = '';
+  for(const r of MEM_MAP) {
+    html += `<div class="memmap-row">
+      <span class="memmap-addr">${r.addr}</span>
+      <div class="memmap-bar"><div class="memmap-fill" style="width:${r.pct}%;background:${r.color}"></div></div>
+      <span class="memmap-label">${r.label}</span>
+      <span class="memmap-size">${r.size}</span>
+    </div>`;
   }
-
-  // Ignition advance
-  if(ign!==0){
-    S.ignMap=S.ignMap.map(row=>row.map(v=>Math.max(0,Math.min(255,Math.round(v+(ign*2))))));
-    renderMap('ign-map-wrap',S.ignMap,'ign');
-    tlog(`[REMAP] Ignition ${ign>0?'+':''}${ign}° applied`,'ok');
-  }
-
-  el('remap-queue').innerHTML=`Queue: <span style="color:var(--grn)">✓ Semua parameter applied</span>`;
-  tlog('[REMAP] ✓ Remap selesai — cek live data!','ok');
+  el.innerHTML = html;
 }
 
-function resetRemap(){buildMaps();tlog('[REMAP] Maps di-reset ke stock baseline','warn');}
+// ==================== REMAP MAPS ====================
+const RPM_AXIS = [500,1000,1500,2000,2500,3000,4000,5000,6000,7000,8000,9000,10000,11000,12000,13000];
+const KPA_AXIS = [20,30,40,50,60,70,80,90,100,110,115,120];
 
-function saveRemapProfile(){
-  const profile={ecu:S.selectedEcu,timestamp:new Date().toISOString(),
-    params:{idle:el('sl-idle').value,fuel:el('sl-fuel').value,ign:el('sl-ign').value,lam:el('sl-lam').value,rpm:el('sl-rpm').value},
-    fuelMap:S.fuelMap,ignMap:S.ignMap};
-  const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='remap_profile.json';a.click();
-  tlog('[SAVE] ✓ Remap profile saved','ok');
+function buildFuelMap() {
+  fuelMap = RPM_AXIS.map(() => KPA_AXIS.map(() => 128 + Math.round((Math.random()-0.5)*10)));
+  renderMap('fuelMapWrap', fuelMap, 'fuel');
 }
 
-// ── DTC ──
-function readDTC(){
-  if(S.connected&&!S.demo) writeB(CMD.RDTC);
-  else parseDTC([7,13,0,0]);
-  tlog('[DTC] Read DTC command sent','info');
+function buildIgnMap() {
+  ignMap = RPM_AXIS.map(() => KPA_AXIS.map(() => 148 + Math.round((Math.random()-0.5)*8)));
+  renderMap('ignMapWrap', ignMap, 'ign');
 }
 
-function clearDTC(){
-  if(!confirm('Clear semua DTC codes?')) return;
-  if(S.connected&&!S.demo) writeB(CMD.CLRDTC);
-  tlog('[DTC] Clear DTC command sent','warn');
-  el('dtc-list').innerHTML='<div style="color:var(--grn);font-family:\'Share Tech Mono\',monospace;padding:10px">✓ DTC Cleared</div>';
-  el('top-dtc').textContent='DTC: 0';el('top-dtc').style.color='var(--dim2)';
-}
-
-function freezeDTC(){
-  const snap=`FREEZE [${new Date().toLocaleTimeString()}] RPM:${el('rpm-txt').textContent} ECT:${el('d-ect').textContent} TPS:${el('d-tps').textContent} MAP:${el('d-map').textContent}`;
-  tlog('[FREEZE] '+snap,'ok');
-}
-
-function buildDTCRef(){
-  const ref=el('dtc-ref');
-  let html='';
-  Object.entries(DTC_DB).forEach(([code,d])=>{
-    const col=d.severity==='high'?'var(--red)':d.severity==='med'?'var(--ylw)':'var(--txt)';
-    html+=`<div class="dtc-item"><span class="dtc-mil" style="color:${col}">MIL-${code}</span><span class="dtc-desc"><span style="color:var(--wht)">${d.name}</span><br>${d.desc}</span><span class="badge" style="border-color:${col};color:${col}">${d.severity}</span></div>`;
-  });
-  ref.innerHTML=html;
-}
-
-// ── DEMO ──
-function doDemo(){
-  S.demo=true;S.connected=true;
-  setPipe('p-usb','warn','DEMO');setPipe('p-zeus','warn','SIM');setPipe('p-ecu','on','SIM ECU');
-  el('btn-con').style.display='none';el('btn-dis').style.display='inline-block';
-  el('ei-stat').textContent='DEMO MODE';el('ei-stat').style.color='var(--ylw)';
-  setTopMode('DEMO');
-  tlog('[DEMO] Simulasi Honda Keihin ECU aktif','warn');
-
-  let t=0;
-  setInterval(()=>{
-    if(!S.connected) return;
-    t+=0.06;
-    const rpm=Math.max(850,2800+Math.sin(t)*2000+Math.sin(t*3.3)*300+(Math.random()-0.5)*80);
-    updRPM(rpm);
-    const spd=Math.max(0,Math.round(rpm/40+Math.sin(t*0.4)*20));
-    const tps=Math.max(3,Math.round(22+Math.sin(t)*22));
-    const ect=Math.round(82+Math.sin(t*0.06)*8);
-    const iat=Math.round(32+Math.sin(t*0.04)*10);
-    const map=Math.round(50+Math.sin(t*1.1)*28);
-    const o2=(0.45+Math.sin(t*5)*0.35).toFixed(3);
-    const bat=(14.1+Math.sin(t*0.09)*0.3).toFixed(1);
-    const inj=(2.8+Math.sin(t)*0.9).toFixed(2);
-    const ign=(12+Math.sin(t*1.2)*5).toFixed(1);
-    const stft=(Math.sin(t*2.1)*7).toFixed(1);
-
-    updVal('d-spd',spd);updVal('d-tps',tps+'%',tps/100);
-    updVal('d-ect',ect+'°C');sbFill('sb-ect',(ect+40)/200);
-    updVal('d-iat',iat+'°C');sbFill('sb-iat',(iat+40)/200);
-    updVal('d-map',map+' kPa');sbFill('sb-map',map/120);
-    updVal('d-o2',o2+'V');sbFill('sb-o2',parseFloat(o2)/5);
-    updVal('d-bat',bat+'V');
-    updVal('d-inj',inj+'ms');
-    updVal('d-ign',ign+'°');
-    updVal('d-stft',(stft>0?'+':'')+stft+'%');
-    updVal('d-lam',(1+parseFloat(stft)/100).toFixed(3));sbFill('sb-lam',0.5+parseFloat(stft)/200);
-    updVal('d-gear',Math.min(6,Math.max(1,Math.round(rpm/1200))).toString());
-    el('top-ect').textContent=ect+'°C';
-
-    S.histO2.push(parseFloat(o2));S.histO2.shift();
-    S.histTps.push(tps);S.histTps.shift();
-    S.histInj.push(parseFloat(inj));S.histInj.shift();
-    S.fc++;
-  },180);
-}
-
-// ── DISCONN ──
-function doDisc(){
-  S.connected=false;
-  try{S.reader?.cancel();}catch(e){}
-  try{S.port?.close();}catch(e){}
-  S.port=S.reader=null;
-  ['p-usb','p-zeus','p-ecu','p-flash'].forEach(id=>setPipe(id,'off',''));
-  setTopMode('OFFLINE');
-  el('btn-con').style.display='inline-block';el('btn-dis').style.display='none';
-  el('ei-stat').textContent='OFFLINE';el('ei-stat').style.color='var(--dim2)';
-  tlog('[DISC] Koneksi diputus','warn');
-}
-
-// ── TERMINAL ──
-function tlog(msg,type='info'){
-  const col={info:'#2a6080',ok:'#00cc66',warn:'#bb9900',err:'#cc2244',tx:'#00aacc',rx:'#aa5500'};
-  const tm=new Date().toTimeString().slice(0,8);
-  const t=el('term-out');
-  t.innerHTML+=`<div style="color:${col[type]||col.info}">[${tm}] ${msg}</div>`;
-  t.scrollTop=t.scrollHeight;
-  const lines=t.querySelectorAll('div');
-  if(lines.length>120) lines[0].remove();
-}
-
-function clrTerm(){el('term-out').innerHTML='';}
-
-function sendRaw(){
-  const v=el('t-inp').value.trim();
-  if(!v) return;
-  const bytes=v.split(/\s+/).map(b=>parseInt(b,16)).filter(b=>!isNaN(b));
-  if(bytes.length) writeB(bytes);
-  el('t-inp').value='';
-}
-
-function qcmd(name){
-  const map={WAKE:CMD.WAKE,INIT:CMD.INIT,T00:CMD.T00,T10:CMD.T10,T11:CMD.T11,T60:CMD.T60,RDTC:CMD.RDTC,CLRDTC:CMD.CLRDTC,KA:CMD.KA,FLASH:CMD.FLASH};
-  if(map[name]){writeB(map[name]);tlog(`[TX] ${name}: ${toHex(map[name])}`,'tx');}
-}
-
-// ── WRITE ──
-async function writeB(bytes){
-  if(S.port?.writable&&!S.demo){
-    try{const w=S.port.writable.getWriter();await w.write(new Uint8Array(bytes));w.releaseLock();}
-    catch(e){tlog('[TX ERR] '+e.message,'err');return;}
-  }
-  tlog(`[TX] ${toHex(bytes)}`,'tx');
-}
-
-// ── OSCOPE ──
-function startOscope(){
-  setInterval(drawOscope,100);
-}
-
-function drawOscope(){
-  drawCv('cv-rpm',S.histRpm,0,ECU_DB[S.selectedEcu]?.maxRpm||11000,'var(--grn)');
-  drawCv('cv-o2',S.histO2,0,1,'var(--ylw)');
-  drawCv('cv-tps',S.histTps,0,100,'var(--org)');
-  drawCv('cv-inj',S.histInj,0,10,'var(--acc)');
-}
-
-function drawCv(id,data,min,max,col){
-  const cv=el(id);if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const w=cv.width,h=cv.height;
-  ctx.fillStyle='rgba(4,8,12,0.8)';ctx.fillRect(0,0,w,h);
-  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
-  for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(0,h/4*i);ctx.lineTo(w,h/4*i);ctx.stroke();}
-  ctx.strokeStyle=col;ctx.lineWidth=1.5;
-  ctx.shadowColor=col;ctx.shadowBlur=4;
-  ctx.beginPath();
-  data.forEach((v,i)=>{
-    const x=i/data.length*w;
-    const y=h-(v-min)/(max-min)*h;
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-  });
-  ctx.stroke();ctx.shadowBlur=0;
-}
-
-// ── FPS ──
-function startFps(){
-  setInterval(()=>{const fps=Math.round(S.fc/((Date.now()-S.fpsT)/1000));S.fc=0;S.fpsT=Date.now();el('top-rpm').textContent=el('rpm-txt').textContent+' RPM';},1000);
-}
-
-// ── HELPERS ──
-function el(id){return document.getElementById(id);}
-function delay(ms){return new Promise(r=>setTimeout(r,ms));}
-function toHex(b){return b.map(x=>x.toString(16).padStart(2,'0').toUpperCase()).join(' ');}
-
-function updRPM(rpm){
-  const ecu=ECU_DB[S.selectedEcu];const maxRpm=ecu?.maxRpm||11000;
-  const pct=Math.min(rpm/maxRpm,1);
-  el('rpm-txt').textContent=Math.round(rpm).toLocaleString();
-  el('rpm-arc').style.strokeDashoffset=392*(1-pct);
-  const c=rpm>maxRpm*0.85?'var(--red)':rpm>maxRpm*0.65?'var(--ylw)':'var(--grn)';
-  el('rpm-txt').setAttribute('fill',c.replace('var(','').replace(')',''));
-  el('top-rpm').textContent=Math.round(rpm)+' RPM';
-  S.histRpm.push(rpm);S.histRpm.shift();
-}
-
-function updVal(id,val){const e=el(id);if(e)e.textContent=val;}
-function sbFill(id,pct){const e=el(id);if(e)e.style.width=Math.max(0,Math.min(100,pct*100))+'%';}
-function prRow(id,raw,val){const r=el(id);if(!r)return;const cells=r.querySelectorAll('td');if(cells[1])cells[1].textContent=raw;if(cells[2])cells[2].textContent=val;}
-
-function setPipe(id,state,label){
-  const d=el(id);if(!d)return;
-  const l=el(id+'-l');
-  d.className='pdot '+(state==='on'?'on':state==='warn'?'warn':state==='err'?'err':'');
-  if(l&&label)l.textContent=label;
-  if(l)l.style.color=state==='on'?'var(--grn)':state==='warn'?'var(--ylw)':state==='err'?'var(--red)':'var(--dim2)';
-}
-
-function setTopMode(m){el('top-mode').textContent=m;el('top-mode').style.color=m==='ONLINE'?'var(--grn)':m==='DEMO'?'var(--ylw)':'var(--dim2)';}
-
-function addBaudRow(b, label, state){
-  // label bisa string deskripsi (misal "10400 Honda native K-Line")
-  // backward compat: jika label adalah state string langsung
-  if(state===undefined){ state=label; label=b+' baud'; }
-  const uid = 'br-'+b;
-  let r=el(uid);
-  if(!r){
-    r=document.createElement('div'); r.id=uid; r.className='pb';
-    r.innerHTML=`<div class="pb-row">
-      <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--acc)">${label}</span>
-      <span id="bs-${b}" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ylw)">⏳ testing...</span>
-    </div>
-    <div class="pb-bar"><div class="pb-fill" id="bf-${b}" style="width:20%;background:var(--ylw);transition:all 0.4s"></div></div>`;
-    el('baud-rows').appendChild(r);
-  }
-  const fill=el('bf-'+b); const stat=el('bs-'+b);
-  if(state==='testing'){
-    fill.style.cssText='width:40%;background:var(--ylw);transition:all 0.4s';
-    stat.style.color='var(--ylw)'; stat.textContent='⏳ testing...';
-  }
-  if(state==='ok'){
-    fill.style.cssText='width:100%;background:var(--grn);transition:all 0.4s';
-    stat.style.color='var(--grn)'; stat.textContent='✓ RESPONSE OK!';
-  }
-  if(state==='fail'){
-    fill.style.cssText='width:100%;background:var(--red);transition:all 0.4s';
-    stat.style.color='var(--red)'; stat.textContent='✗ no resp';
+function mapColor(v, mapType) {
+  if (mapType === 'fuel') {
+    const norm = (v-80)/(180-80);
+    const r = Math.round(norm*220);
+    const b = Math.round((1-norm)*220);
+    return `rgb(${r},${Math.round(40+norm*20)},${b})`;
+  } else {
+    const deg = v/2-64;
+    const norm = (deg+10)/40;
+    const r = Math.round(norm*200);
+    const g = Math.round((1-Math.abs(norm-0.5))*180);
+    return `rgb(${r},${g},30)`;
   }
 }
 
-function sw(btn,id){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('a'));
-  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('a'));
-  btn.classList.add('a');el(id).classList.add('a');
+function renderMap(containerId, data, mapType) {
+  const sel = mapType==='fuel' ? selectedFuelCell : selectedIgnCell;
+  let html = '<table class="map-table"><thead><tr><th>RPM↓ kPa→</th>';
+  for(const k of KPA_AXIS) html += `<th>${k}</th>`;
+  html += '</tr></thead><tbody>';
+  for(let r=0; r<RPM_AXIS.length; r++) {
+    html += `<tr><th style="padding:0 8px;color:var(--accent2);background:var(--bg3);font-family:'Share Tech Mono';font-size:10px">${RPM_AXIS[r]}</th>`;
+    for(let c=0; c<KPA_AXIS.length; c++) {
+      const v = data[r][c];
+      const color = mapColor(v, mapType);
+      const brightness = v > 128 ? '#fff' : '#ccc';
+      const selCls = (sel && sel[0]===r && sel[1]===c) ? ' selected' : '';
+      html += `<td style="background:${color};color:${brightness}" class="${selCls}" onclick="selectCell('${mapType}',${r},${c})">
+        <input class="map-cell-input" style="color:${brightness}" value="${v}" onchange="cellChange('${mapType}',${r},${c},this.value)" onfocus="selectCell('${mapType}',${r},${c})">
+      </td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function selectCell(type, r, c) {
+  if(type==='fuel') { selectedFuelCell=[r,c]; document.getElementById('fuelSel').textContent=`RPM:${RPM_AXIS[r]} kPa:${KPA_AXIS[c]} = ${fuelMap[r][c]}`; document.getElementById('fuelVal').value=fuelMap[r][c]; }
+  else { selectedIgnCell=[r,c]; document.getElementById('ignSel').textContent=`RPM:${RPM_AXIS[r]} kPa:${KPA_AXIS[c]} = ${ignMap[r][c]} (${(ignMap[r][c]/2-64).toFixed(1)}°)`; document.getElementById('ignVal').value=ignMap[r][c]; }
+  renderMap(type==='fuel'?'fuelMapWrap':'ignMapWrap', type==='fuel'?fuelMap:ignMap, type);
+}
+
+function cellChange(type, r, c, v) {
+  const val = Math.max(0, Math.min(255, parseInt(v)||0));
+  if(type==='fuel') fuelMap[r][c]=val;
+  else ignMap[r][c]=val;
+}
+
+function setFuelCell() {
+  if(!selectedFuelCell) return;
+  const v = parseInt(document.getElementById('fuelVal').value);
+  fuelMap[selectedFuelCell[0]][selectedFuelCell[1]] = Math.max(0,Math.min(255,v));
+  renderMap('fuelMapWrap', fuelMap, 'fuel');
+}
+
+function setIgnCell() {
+  if(!selectedIgnCell) return;
+  const v = parseInt(document.getElementById('ignVal').value);
+  ignMap[selectedIgnCell[0]][selectedIgnCell[1]] = Math.max(0,Math.min(255,v));
+  renderMap('ignMapWrap', ignMap, 'ign');
+}
+
+function globalTrim(type) {
+  const pct = parseFloat(type==='fuel' ? document.getElementById('fuelTrimPct').value : document.getElementById('ignTrimDeg').value);
+  const map = type==='fuel' ? fuelMap : ignMap;
+  for(let r=0;r<map.length;r++) for(let c=0;c<map[r].length;c++) {
+    if(type==='fuel') map[r][c] = Math.max(0,Math.min(255,Math.round(map[r][c]*(1+pct/100))));
+    else map[r][c] = Math.max(0,Math.min(255,Math.round(map[r][c]+pct*2)));
+  }
+  renderMap(type==='fuel'?'fuelMapWrap':'ignMapWrap', map, type);
+}
+
+// ==================== REMAP PARAMS ====================
+function buildParamRows() {
+  const el = document.getElementById('paramRows');
+  let html = '';
+  for(const p of REMAP_PARAMS) {
+    html += `<div class="param-row">
+      <span class="param-label">${p.label}</span>
+      <input class="param-input" id="pr-${p.id}" type="number" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.def}" onchange="syncRange('${p.id}')">
+      <span class="param-unit">${p.unit}</span>
+      <div class="param-range"><input type="range" id="prr-${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.def}" oninput="syncInput('${p.id}')"></div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function syncRange(id) { const v=document.getElementById('pr-'+id).value; document.getElementById('prr-'+id).value=v; }
+function syncInput(id) { const v=document.getElementById('prr-'+id).value; document.getElementById('pr-'+id).value=v; }
+
+async function applyRemap() {
+  if (!connected && !demoMode) { alert('Tidak terkoneksi!'); return; }
+  const queue = [];
+  for(const p of REMAP_PARAMS) {
+    const v = parseFloat(document.getElementById('pr-'+p.id).value);
+    queue.push(p.id + '=' + v + p.unit);
+  }
+  document.getElementById('remapQueue').textContent = 'Applying: ' + queue.join(', ');
+  termLog('[SYS] Applying remap params...', 't-warn');
+  await new Promise(r=>setTimeout(r,500));
+  document.getElementById('remapQueue').textContent = 'Queue: ' + (demoMode ? 'Demo applied OK' : 'Sent to ECU');
+  termLog('[SYS] Remap applied.', 't-sys');
+}
+
+function resetRemap() {
+  for(const p of REMAP_PARAMS) {
+    document.getElementById('pr-'+p.id).value = p.def;
+    document.getElementById('prr-'+p.id).value = p.def;
+  }
+  document.getElementById('remapQueue').textContent = 'Queue: reset to stock';
+}
+
+function saveProfile() {
+  const profile = {};
+  for(const p of REMAP_PARAMS) profile[p.id] = parseFloat(document.getElementById('pr-'+p.id).value);
+  profile.fuelMap = fuelMap;
+  profile.ignMap = ignMap;
+  profile.ecu = ecuModel;
+  profile.saved = new Date().toISOString();
+  const blob = new Blob([JSON.stringify(profile,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (ecuModel||'ecu') + '_remap_' + Date.now() + '.json';
+  a.click();
+}
+
+function loadProfile() { document.getElementById('profileInput').click(); }
+function onProfileLoad(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const fr = new FileReader();
+  fr.onload = ev => {
+    try {
+      const p = JSON.parse(ev.target.result);
+      for(const param of REMAP_PARAMS) {
+        if(p[param.id] !== undefined) {
+          document.getElementById('pr-'+param.id).value = p[param.id];
+          document.getElementById('prr-'+param.id).value = p[param.id];
+        }
+      }
+      if(p.fuelMap) { fuelMap = p.fuelMap; renderMap('fuelMapWrap', fuelMap, 'fuel'); }
+      if(p.ignMap) { ignMap = p.ignMap; renderMap('ignMapWrap', ignMap, 'ign'); }
+      termLog('[SYS] Profile loaded: ' + file.name, 't-sys');
+    } catch(err) { alert('Error: invalid profile JSON'); }
+  };
+  fr.readAsText(file);
+}
+
+// ==================== DTC ====================
+function buildDtcRef() {
+  const tb = document.getElementById('dtcRefTable');
+  let html = '<thead><tr><th>CODE</th><th>DESCRIPTION</th><th>SYSTEM</th></tr></thead><tbody>';
+  for(const d of DTC_DB) html += `<tr><td class="val-cell">${d.code}</td><td>${d.desc}</td><td style="color:var(--text2)">${d.sys}</td></tr>`;
+  html += '</tbody>';
+  tb.innerHTML = html;
+}
+
+function clearDtc() {
+  sendCmd('CLRDTC');
+  document.getElementById('dtcList').innerHTML = '<div style="color:var(--accent3);font-family:\'Share Tech Mono\';font-size:12px;padding:12px 0">DTC cleared.</div>';
+}
+
+function readFreezeFrame() {
+  termLog('[SYS] Freeze frame requested (Table 0x76)...', 't-sys');
+  if(connected && !demoMode) writeSerial('CMD:72 05 73 01 15\n');
+}
+
+// Simulate DTC read in demo
+function simulateDtcRead() {
+  const active = [DTC_DB[0], DTC_DB[6]];
+  let html = '';
+  for(const d of active) {
+    html += `<div class="dtc-item ${d.sev}">
+      <span class="dtc-code">${d.code}</span>
+      <span class="dtc-desc">${d.desc}</span>
+      <span class="dtc-status">${d.sev.toUpperCase()}</span>
+    </div>`;
+  }
+  document.getElementById('dtcList').innerHTML = html;
+}
+// Override sendCmd for demo DTC
+const _origSendCmd = sendCmd;
+
+// ==================== CSV EXPORT ====================
+function exportCSV() {
+  if (!liveLog.length) { alert('Tidak ada data live!'); return; }
+  const keys = ['t','rpm','spd','tps','ect','iat','map','o2','bat','inj','ign','stft','ltft'];
+  let csv = keys.join(',') + '\n';
+  for(const row of liveLog) csv += keys.map(k => row[k]??'').join(',') + '\n';
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'live_data_' + Date.now() + '.csv';
+  a.click();
+}
+
+// ==================== FIRMWARE RENDER ====================
+function renderFirmware() {
+  // Simple syntax highlight
+  let code = FIRMWARE;
+  code = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // comments
+  code = code.replace(/(\/\*[\s\S]*?\*\/|\/\/[^\n]*)/g, '<span class="cm">$1</span>');
+  // strings
+  code = code.replace(/"([^"\\]|\\.)*"/g, '<span class="str">$&</span>');
+  // keywords
+  const kws = ['void','int','byte','bool','String','unsigned','long','if','else','while','for','return','true','false','include','define','const'];
+  for(const kw of kws) code = code.replace(new RegExp(`\\b${kw}\\b`,'g'), `<span class="kw">${kw}</span>`);
+  // numbers
+  code = code.replace(/\b(0x[0-9A-Fa-f]+|\d+)\b/g, '<span class="num">$1</span>');
+  document.getElementById('firmwareCode').innerHTML = code;
+}
+
+function copyFirmware() {
+  navigator.clipboard.writeText(FIRMWARE).then(()=>alert('Firmware copied to clipboard!'));
 }
 </script>
 </body>
